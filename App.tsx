@@ -29,6 +29,9 @@ const App = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterEje, setFilterEje] = useState('Todos');
     
+    // Mobile Sidebar State
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    
     // Auth States
     const [userRole, setUserRole] = useState<'usuario' | 'administrador'>('usuario');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -324,17 +327,24 @@ const App = () => {
         return groups;
     }, [filteredData]);
 
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
     return (
         <div className="flex h-screen bg-slate-100 font-sans text-slate-800 overflow-hidden">
             
             <Sidebar 
                 currentView={currentView} 
-                setCurrentView={setCurrentView} 
+                setCurrentView={(view) => {
+                    setCurrentView(view);
+                    setIsSidebarOpen(false); // Close sidebar on mobile when navigating
+                }} 
                 instrumentsCount={instrumentsData.length} 
                 userRole={userRole} 
                 handleResetData={handleResetData}
                 isAuthenticated={isAuthenticated}
                 handleLogout={handleLogout}
+                isOpen={isSidebarOpen}
+                closeSidebar={() => setIsSidebarOpen(false)}
             />
 
             {/* --- MAIN CONTENT --- */}
@@ -349,9 +359,10 @@ const App = () => {
                     onExport={handleExportExcel}
                     onImport={handleImportExcel}
                     userRole={userRole}
+                    toggleSidebar={toggleSidebar}
                 />
 
-                <div className="flex-1 overflow-y-auto p-6 scroll-smooth relative custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth relative custom-scrollbar">
                     
                     {/* View: Analítica */}
                     {currentView === 'analitica' && (

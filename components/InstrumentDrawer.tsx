@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Settings, Save, CheckCircle2, Activity, ExternalLink, FileText } from 'lucide-react';
 import { Instrumento } from '@/types';
