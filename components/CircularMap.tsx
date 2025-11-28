@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { CalendarRange, Grid3X3, FileText, Check, Crown, ExternalLink, Activity, Filter, Layers, ChevronRight } from 'lucide-react';
+import { CalendarRange, Grid3X3, FileText, Check, Crown, Layers, ChevronRight, Filter, Map as MapIcon } from 'lucide-react';
 import { Instrumento } from '@/types';
-import { CALI, AXIS_ORDER, VISION_IMAGE_URL } from '@/utils/constants';
+import { CALI, AXIS_ORDER } from '@/utils/constants';
 
 interface MapNode extends Instrumento {
     x: number;
@@ -21,6 +21,9 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
     const [hoveredItem, setHoveredItem] = useState<{ inst: MapNode; x: number; y: number } | null>(null);
     const [hoveredHorizon, setHoveredHorizon] = useState<string | null>(null);
     const [hoveredSector, setHoveredSector] = useState<string | null>(null);
+    
+    // Mobile Tab State
+    const [activeTab, setActiveTab] = useState<'transversales' | 'mapa' | 'filtros'>('mapa');
 
     // Filtros locales para el mapa
     const [selectedAxes, setSelectedAxes] = useState<string[]>(AXIS_ORDER);
@@ -62,7 +65,6 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
     };
 
     // Configuración de Ejes (3 Ejes distribuidos en 360 grados = 120 grados cada uno)
-    // Empezamos en -90 (arriba) para que se vea simétrico
     const AXIS_SECTORS: Record<string, any> = {
         'Bienestar Basado en la Interculturalidad': { 
             start: -Math.PI / 2, // -90 deg
@@ -107,11 +109,9 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
         Object.entries(groups).forEach(([key, groupItems]) => {
             const [eje, horizon] = key.split('-');
             const sector = AXIS_SECTORS[eje];
-            if (!sector) return; // Should not happen given we filtered Transversales
+            if (!sector) return;
 
             const fixedR = (RADII[horizon as 'corto' | 'mediano' | 'largo']).fixed;
-            
-            // Add padding to avoid elements on the exact line
             const padding = 0.15; 
             const sectorSpan = (sector.end - sector.start) - (2 * padding);
             const step = sectorSpan / (groupItems.length + 1);
@@ -136,10 +136,36 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
     }, [mapInstruments, selectedAxes, selectedTypes]);
 
     return (
-        <div className="flex h-full bg-slate-50 overflow-hidden relative">
+        <div className="flex flex-col lg:flex-row h-full bg-slate-50 overflow-hidden relative">
             
+            {/* Mobile Tab Navigation */}
+            <div className="lg:hidden flex shrink-0 bg-white border-b border-slate-200 shadow-sm z-30 overflow-x-auto">
+                <button 
+                    onClick={() => setActiveTab('transversales')}
+                    className={`flex-1 py-3 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'transversales' ? 'text-rose-600 border-b-2 border-rose-600 bg-rose-50/50' : 'text-slate-500'}`}
+                >
+                    <Layers className="h-4 w-4" /> Transversales
+                </button>
+                <button 
+                    onClick={() => setActiveTab('mapa')}
+                    className={`flex-1 py-3 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'mapa' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50/50' : 'text-slate-500'}`}
+                >
+                    <MapIcon className="h-4 w-4" /> Mapa
+                </button>
+                <button 
+                    onClick={() => setActiveTab('filtros')}
+                    className={`flex-1 py-3 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'filtros' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500'}`}
+                >
+                    <Filter className="h-4 w-4" /> Filtros
+                </button>
+            </div>
+
             {/* Left Panel: Transversales */}
-            <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-xl z-20 overflow-hidden shrink-0">
+            <div className={`
+                bg-white border-r border-slate-200 flex-col shadow-xl z-20 overflow-hidden shrink-0
+                ${activeTab === 'transversales' ? 'flex w-full h-full' : 'hidden'} 
+                lg:flex lg:w-80
+            `}>
                 <div className="p-6 bg-rose-50/50 border-b border-rose-100">
                     <div className="flex items-center gap-2 mb-2">
                         <Layers className="h-6 w-6 text-rose-600" />
@@ -199,9 +225,13 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
                 </div>
             </div>
 
-             {/* Center Area: Map */}
-            <div className="flex-1 flex flex-col items-center justify-center p-4 fade-in relative overflow-hidden bg-slate-50">
-                <div className="relative w-full max-w-4xl aspect-square bg-white rounded-[3rem] p-4 shadow-xl border border-slate-200 mx-auto">
+             {/* Center Area: Map (Static) */}
+            <div className={`
+                relative overflow-hidden bg-slate-100 items-center justify-center p-4
+                ${activeTab === 'mapa' ? 'flex w-full h-full' : 'hidden'}
+                lg:flex lg:flex-1
+            `}>
+                <div className="relative w-full max-w-[800px] aspect-square bg-white rounded-full shadow-2xl border border-slate-200">
                     <svg viewBox="0 0 800 800" className="w-full h-full font-sans select-none">
                         <defs>
                             <radialGradient id="gradCenterGreen" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -219,7 +249,7 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
 
                         {/* Background Sectors */}
                         {Object.entries(AXIS_SECTORS).map(([name, sector]: any) => (
-                             <path
+                                <path
                                 key={name}
                                 d={`M 400 400 L ${400 + 400 * Math.cos(sector.start)} ${400 + 400 * Math.sin(sector.start)} A 400 400 0 0 1 ${400 + 400 * Math.cos(sector.end)} ${400 + 400 * Math.sin(sector.end)} Z`}
                                 fill={sector.color}
@@ -230,28 +260,20 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
 
                         {/* Rings */}
                         <g>
-                            {/* Inner Circle (Short Term) */}
                             <circle cx="400" cy="400" r="180" fill="none" stroke={hoveredItem?.inst.horizon === 'corto' || hoveredHorizon === 'corto' ? CALI.VERDE : "#e2e8f0"} strokeWidth={hoveredItem?.inst.horizon === 'corto' || hoveredHorizon === 'corto' ? 2 : 1} strokeDasharray="4 4" className="transition-all duration-300" />
-                            
-                            {/* Middle Circle (Medium Term) */}
                             <circle cx="400" cy="400" r="280" fill="none" stroke={hoveredItem?.inst.horizon === 'mediano' || hoveredHorizon === 'mediano' ? CALI.AMARILLO : "#e2e8f0"} strokeWidth={hoveredItem?.inst.horizon === 'mediano' || hoveredHorizon === 'mediano' ? 2 : 1} strokeDasharray="4 4" className="transition-all duration-300" />
-                            
-                            {/* Outer Circle (Long Term) */}
                             <circle cx="400" cy="400" r="380" fill="none" stroke={hoveredItem?.inst.horizon === 'largo' || hoveredHorizon === 'largo' ? CALI.TURQUESA : "#e2e8f0"} strokeWidth={hoveredItem?.inst.horizon === 'largo' || hoveredHorizon === 'largo' ? 2 : 1} className="transition-all duration-300 opacity-50" />
                         </g>
 
                         {/* Axis Labels */}
-                        {Object.entries(AXIS_SECTORS).map(([name, sector]: any) => {
-                            // Calculate mid angle for label positioning if needed, but we use fixed coords for layout stability
-                            return (
-                                <g key={name} opacity={hoveredItem?.inst.eje === name || hoveredSector === name ? 1 : 0.6} className="transition-opacity duration-300">
-                                    <rect x={sector.labelX - 80} y={sector.labelY - 14} width="160" height="28" rx="14" fill="white" stroke={sector.color} strokeWidth="2" className="shadow-sm drop-shadow-sm" />
-                                    <text x={sector.labelX} y={sector.labelY} fill={sector.textColor} fontSize="10" fontWeight="900" textAnchor="middle" dy=".35em" className="uppercase tracking-widest font-sans">
-                                        {sector.displayName}
-                                    </text>
-                                </g>
-                            )
-                        })}
+                        {Object.entries(AXIS_SECTORS).map(([name, sector]: any) => (
+                            <g key={name} opacity={hoveredItem?.inst.eje === name || hoveredSector === name ? 1 : 0.6} className="transition-opacity duration-300">
+                                <rect x={sector.labelX - 80} y={sector.labelY - 14} width="160" height="28" rx="14" fill="white" stroke={sector.color} strokeWidth="2" className="shadow-sm drop-shadow-sm" />
+                                <text x={sector.labelX} y={sector.labelY} fill={sector.textColor} fontSize="10" fontWeight="900" textAnchor="middle" dy=".35em" className="uppercase tracking-widest font-sans">
+                                    {sector.displayName}
+                                </text>
+                            </g>
+                        ))}
 
                         {/* Horizon Labels */}
                         <text x="400" y="210" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold uppercase tracking-widest opacity-70">Corto Plazo</text>
@@ -259,7 +281,7 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
                         <text x="400" y="15" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold uppercase tracking-widest opacity-70">Largo Plazo</text>
 
                         {/* Center Hub: SANTIAGO DE CALI */}
-                        <g className="cursor-pointer hover:scale-105 transition-transform duration-300" filter="url(#glowGreen)">
+                        <g filter="url(#glowGreen)">
                             <circle cx="400" cy="400" r="75" fill="white" stroke="#dcfce7" strokeWidth="4" />
                             <circle cx="400" cy="400" r="68" fill="url(#gradCenterGreen)" className="shadow-inner" />
                             <text x="400" y="392" textAnchor="middle" fill="white" fontWeight="800" fontSize="14" letterSpacing="1px">SANTIAGO</text>
@@ -277,16 +299,16 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
                                     className={`cursor-pointer transition-all duration-500 ${node.visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                                     onMouseEnter={() => node.visible && setHoveredItem({ inst: node, x: node.x, y: node.y })}
                                     onMouseLeave={() => setHoveredItem(null)}
-                                    onClick={() => node.visible && onSelect(node)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        node.visible && onSelect(node);
+                                    }}
                                     style={{ opacity: isDimmed ? 0.3 : 1 }}
                                 >
-                                    {/* Hover Halo */}
                                     <circle cx={node.x} cy={node.y} r={isHovered ? 20 : 0} fill={node.color} opacity="0.2" className="transition-all duration-300" />
-                                    
                                     <circle cx={node.x} cy={node.y} r={isHovered ? 10 : 7} fill={node.color} stroke="white" strokeWidth="2" className="shadow-md transition-all duration-300" />
-
                                     {isHovered && (
-                                         <circle cx={node.x} cy={node.y} r={14} fill="none" stroke={node.color} strokeWidth="1" className="animate-ping opacity-75" />
+                                            <circle cx={node.x} cy={node.y} r={14} fill="none" stroke={node.color} strokeWidth="1" className="animate-ping opacity-75" />
                                     )}
                                 </g>
                             );
@@ -296,22 +318,19 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
                     {/* Tooltip Card */}
                     {hoveredItem && (
                         <div 
-                            className="absolute z-50 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border border-slate-100 w-72 pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-20px] animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden"
+                            className="absolute z-50 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border border-slate-100 w-72 animate-in fade-in zoom-in-95 duration-200 overflow-hidden pointer-events-none"
                             style={{ 
-                                left: `${(hoveredItem.x / 800) * 100}%`, 
-                                top: `${(hoveredItem.y / 800) * 100}%` 
+                                left: hoveredItem.x - 144, // Center tooltip on node x
+                                top: hoveredItem.y - 120, // Position above node
+                                transformOrigin: 'bottom center'
                             }}
                         >
                             <div className="p-3 pb-0 flex items-center justify-between mb-1">
-                                <span 
-                                    className="text-[9px] font-extrabold uppercase tracking-widest py-0.5 px-2 rounded text-white shadow-sm"
-                                    style={{ backgroundColor: hoveredItem.inst.color }}
-                                >
+                                <span className="text-[9px] font-extrabold uppercase tracking-widest py-0.5 px-2 rounded text-white shadow-sm" style={{ backgroundColor: hoveredItem.inst.color }}>
                                     {hoveredItem.inst.horizon === 'corto' ? 'Corto Plazo' : hoveredItem.inst.horizon === 'mediano' ? 'Mediano Plazo' : 'Largo Plazo'}
                                 </span>
                                 <span className="text-[10px] font-bold text-slate-400">ID: {hoveredItem.inst.id}</span>
                             </div>
-                            
                             <div className="p-4 pt-1">
                                 <h4 className="font-bold text-slate-800 text-sm leading-snug mb-2">{hoveredItem.inst.nombre}</h4>
                                 <div className="space-y-1 text-xs text-slate-600">
@@ -326,8 +345,12 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
                 </div>
             </div>
 
-            {/* Side Filters for Map */}
-            <div className="w-80 bg-white border-l border-slate-200 flex flex-col shadow-2xl z-20 shrink-0">
+            {/* Side Filters for Map (Hidden on mobile unless selected) */}
+            <div className={`
+                bg-white border-l border-slate-200 flex-col shadow-2xl z-20 shrink-0
+                ${activeTab === 'filtros' ? 'flex w-full h-full' : 'hidden'}
+                lg:flex lg:w-80
+            `}>
                 <div className="p-6 border-b border-slate-100 bg-slate-50/50">
                     <div className="flex items-center gap-2 text-slate-800 font-bold text-lg">
                         <Filter className="h-5 w-5 text-indigo-600" />
@@ -370,7 +393,6 @@ export const CircularMap: React.FC<CircularMapProps> = ({ instruments, onSelect 
                         </h3>
                         <div className="space-y-2">
                             {AXIS_ORDER.filter(a => a !== 'Transversal').map(axis => {
-                                const color = AXIS_SECTORS[axis]?.color;
                                 return (
                                     <div 
                                         key={axis} 

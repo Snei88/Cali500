@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileText, CheckCircle2, AlertTriangle, Activity, Lightbulb } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -28,7 +29,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                     <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
                         📊 Distribución por Tipo de Documento
                     </h3>
-                    <div className="flex-1">
+                    <div className="flex-1 w-full min-w-0 min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byType} layout="vertical" margin={{ left: 40, right: 20, top: 10, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
@@ -50,7 +51,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                     <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
                         🎯 Distribución por Eje Estratégico
                     </h3>
-                    <div className="flex-1">
+                    <div className="flex-1 w-full min-w-0 min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byEje} margin={{ top: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -87,7 +88,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                 <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
                     📉 Seguimiento
                 </h3>
-                <div className="flex-1 relative">
+                <div className="flex-1 relative w-full min-w-0 min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -120,7 +121,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                         type="critico" 
                         title="⚠️ HALLAZGOS CRÍTICOS" 
                         items={[
-                            `<strong>${((stats.sinSeguimiento / stats.total) * 100).toFixed(1)}% sin seguimiento:</strong> ${stats.sinSeguimiento} instrumentos carecen de sistema de monitoreo.`,
+                            `<strong>${stats.total > 0 ? ((stats.sinSeguimiento / stats.total) * 100).toFixed(1) : 0}% sin seguimiento:</strong> ${stats.sinSeguimiento} instrumentos carecen de sistema de monitoreo.`,
                             `<strong>${stats.estadosMap['En Actualización']} instrumentos en actualización:</strong> Requieren atención prioritaria (ej: POT y Marco Fiscal).`,
                             `<strong>${stats.estadosMap['Finalizado']} instrumentos finalizados:</strong> Requieren actualización urgente o cierre.`
                         ]} 
