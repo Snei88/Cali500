@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { FileText, CheckCircle2, AlertTriangle, Activity, Lightbulb } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { FileText, CheckCircle2, AlertTriangle, Activity, Lightbulb, BarChart3, Target, PieChart, ScanSearch } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RePieChart, Pie, Cell } from 'recharts';
 import { Stats } from '@/types';
 import { CALI, COLORS } from '@/utils/constants';
 import { KpiCard } from '@/components/dashboard/KpiCard';
@@ -27,7 +27,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                 {/* Chart: By Type */}
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
                     <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
-                        📊 Distribución por Tipo de Documento
+                        <BarChart3 className="h-5 w-5" />
+                        Distribución por Tipo de Documento
                     </h3>
                     <div className="flex-1 w-full min-w-0 min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -49,7 +50,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                 {/* Chart: By Axis */}
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
                     <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
-                        🎯 Distribución por Eje Estratégico
+                        <Target className="h-5 w-5" />
+                        Distribución por Eje Estratégico
                     </h3>
                     <div className="flex-1 w-full min-w-0 min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -73,7 +75,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
 
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
                 <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
-                    ✅ Distribución por Estado
+                    <CheckCircle2 className="h-5 w-5" />
+                    Distribución por Estado
                 </h3>
                 <div className="grid grid-cols-2 grid-rows-2 gap-3 flex-1">
                     <StatusBox label="Permanente" count={stats.estadosMap['Permanente']} colorCode={CALI.VERDE} bgGradient="linear-gradient(135deg, #f0f9e8, #ffffff)" />
@@ -86,11 +89,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
              {/* Pie Chart: Seguimiento */}
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
                 <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
-                    📉 Seguimiento
+                    <PieChart className="h-5 w-5" />
+                    Seguimiento
                 </h3>
                 <div className="flex-1 relative w-full min-w-0 min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
+                        <RePieChart>
                             <Pie
                                 data={[
                                     { name: 'Con Seguimiento', value: stats.conSeguimiento },
@@ -106,20 +110,21 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                             </Pie>
                             <Tooltip />
                             <Legend verticalAlign="bottom" height={36} />
-                        </PieChart>
+                        </RePieChart>
                     </ResponsiveContainer>
                 </div>
             </div>
 
             {/* Detailed Analysis Section */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h2 className="text-lg font-bold mb-6 pb-2 border-b-4" style={{ color: CALI.MORADO, borderColor: CALI.MORADO }}>
-                    🔍 Análisis Ejecutivo y Hallazgos Clave
+                <h2 className="text-lg font-bold mb-6 pb-2 border-b-4 flex items-center gap-2" style={{ color: CALI.MORADO, borderColor: CALI.MORADO }}>
+                    <ScanSearch className="h-6 w-6" />
+                    Análisis Ejecutivo y Hallazgos Clave
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <AnalysisBox 
                         type="critico" 
-                        title="⚠️ HALLAZGOS CRÍTICOS" 
+                        title="HALLAZGOS CRÍTICOS" 
                         items={[
                             `<strong>${stats.total > 0 ? ((stats.sinSeguimiento / stats.total) * 100).toFixed(1) : 0}% sin seguimiento:</strong> ${stats.sinSeguimiento} instrumentos carecen de sistema de monitoreo.`,
                             `<strong>${stats.estadosMap['En Actualización']} instrumentos en actualización:</strong> Requieren atención prioritaria (ej: POT y Marco Fiscal).`,
@@ -128,7 +133,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                     />
                     <AnalysisBox 
                         type="alerta" 
-                        title="📊 CONCENTRACIÓN Y RETOS DE ARTICULACIÓN" 
+                        title="CONCENTRACIÓN Y RETOS DE ARTICULACIÓN" 
                         items={[
                             "<strong>Alta concentración en Bienestar:</strong> La mayoría de los instrumentos están enfocados en el eje de Bienestar Intercultural.",
                             "<strong>Reto de Competitividad:</strong> Menor número de instrumentos dedicados específicamente al eje de Competitividad Sostenible.",
@@ -137,7 +142,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                     />
                     <AnalysisBox 
                         type="oportunidad" 
-                        title="✅ FORTALEZAS IDENTIFICADAS" 
+                        title="FORTALEZAS IDENTIFICADAS" 
                         items={[
                             `<strong>${stats.cobertura}% con seguimiento:</strong> ${stats.conSeguimiento} instrumentos cuentan con monitoreo.`,
                             `<strong>${stats.estadosMap['En Ejecución']} en ejecución activa:</strong> Mayoría operativa según cronograma.`,
@@ -145,7 +150,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                         ]} 
                     />
                     <div className="p-4 rounded-md border-l-4 bg-slate-50" style={{ borderLeftColor: CALI.TURQUESA, backgroundColor: '#f0fdf4' }}>
-                        <h4 className="text-sm font-bold mb-3" style={{ color: CALI.MORADO }}>🎯 RECOMENDACIONES PARA LA ARTICULACIÓN</h4>
+                        <h4 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: CALI.MORADO }}>
+                            <Target className="h-4 w-4" style={{ color: '#0f766e' }} />
+                            RECOMENDACIONES PARA LA ARTICULACIÓN
+                        </h4>
                         <ul className="space-y-2">
                             <li className="text-xs text-slate-700 leading-relaxed pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-slate-400"><strong>Sistema integrado de seguimiento:</strong> Implementar monitoreo en los instrumentos faltantes.</li>
                             <li className="text-xs text-slate-700 leading-relaxed pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-slate-400"><strong>Coordinación de actualizaciones:</strong> Los instrumentos en actualización deben guardar coherencia entre sí.</li>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Settings, Save, CheckCircle2, Activity, ExternalLink, FileText } from 'lucide-react';
+import { X, Settings, Save, CheckCircle2, Activity, ExternalLink, FileText, Check } from 'lucide-react';
 import { Instrumento } from '@/types';
 import { CALI, TYPES_ORDER, AXIS_ORDER, STATUS_ORDER, STATUS_COLORS } from '@/utils/constants';
 
@@ -137,15 +137,15 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                             <div className="grid grid-cols-2 gap-3">
                                 <button 
                                     onClick={() => handleToggle('seguimiento', editData.seguimiento === 'Si' ? 'No' : 'Si')}
-                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-colors ${editData.seguimiento === 'Si' ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
+                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1 ${editData.seguimiento === 'Si' ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
                                 >
-                                    {editData.seguimiento === 'Si' ? '✔ Con Seguimiento' : '✖ Sin Seguimiento'}
+                                    {editData.seguimiento === 'Si' ? <><Check className="w-3.5 h-3.5"/> Con Seguimiento</> : <><X className="w-3.5 h-3.5"/> Sin Seguimiento</>}
                                 </button>
                                 <button 
                                     onClick={() => handleToggle('observatorio', editData.observatorio === 'Observatorio' || editData.observatorio === 'Si' ? '' : 'Observatorio')}
-                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-colors ${editData.observatorio ? 'bg-violet-100 border-violet-300 text-violet-800' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
+                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1 ${editData.observatorio ? 'bg-violet-100 border-violet-300 text-violet-800' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
                                 >
-                                    {editData.observatorio ? '✔ Con Observatorio' : '✖ Sin Observatorio'}
+                                    {editData.observatorio ? <><Check className="w-3.5 h-3.5"/> Con Observatorio</> : <><X className="w-3.5 h-3.5"/> Sin Observatorio</>}
                                 </button>
                             </div>
                             <div className="space-y-2">
