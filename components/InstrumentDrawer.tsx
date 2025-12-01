@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { X, Settings, Save, CheckCircle2, Activity, ExternalLink, FileText, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Settings, Save, CheckCircle2, Activity, ExternalLink, FileText, Check, UploadCloud, Download, Trash2, File, AlertCircle } from 'lucide-react';
 import { Instrumento } from '@/types';
 import { CALI, TYPES_ORDER, AXIS_ORDER, STATUS_ORDER, STATUS_COLORS } from '@/utils/constants';
 
@@ -15,9 +15,12 @@ interface InstrumentDrawerProps {
 
 export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, onClose, role, onUpdate, onCreate, isCreating }) => {
     const [editData, setEditData] = useState<Instrumento | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadError, setUploadError] = useState('');
 
     useEffect(() => {
         setEditData(instrument);
+        setUploadError('');
     }, [instrument]);
 
     if (!editData) return null;
@@ -43,6 +46,66 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
         }
         onClose();
     }
+
+    // --- FILE HANDLING LOGIC ---
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validación de tamaño (Máximo 1MB para no saturar LocalStorage en el prototipo)
+        if (file.size > 1024 * 1024) {
+            setUploadError('El archivo es demasiado grande. Máximo 1MB para esta demo.');
+            return;
+        }
+
+        // Validación de tipo
+        const allowedTypes = [
+            'application/pdf', 
+            'application/msword', 
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        
+        if (!allowedTypes.includes(file.type)) {
+            setUploadError('Solo se permiten archivos PDF o Word (.doc, .docx).');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            if (evt.target?.result) {
+                setEditData({
+                    ...editData,
+                    archivo_nombre: file.name,
+                    archivo_base64: evt.target.result as string,
+                    archivo_tipo: file.type
+                });
+                setUploadError('');
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveFile = () => {
+        if (window.confirm('¿Estás seguro de eliminar el documento adjunto?')) {
+            setEditData({
+                ...editData,
+                archivo_nombre: undefined,
+                archivo_base64: undefined,
+                archivo_tipo: undefined
+            });
+        }
+    };
+
+    const handleDownloadFile = () => {
+        if (!editData.archivo_base64 || !editData.archivo_nombre) return;
+        
+        const link = document.createElement('a');
+        link.href = editData.archivo_base64;
+        link.download = editData.archivo_nombre;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <>
@@ -149,7 +212,7 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                                 </button>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-semibold text-slate-600">Enlace Documento (URL)</label>
+                                <label className="text-xs font-semibold text-slate-600">Enlace Documento (URL Externa)</label>
                                 <input 
                                     type="text" 
                                     value={editData.enlace || ''} 
@@ -158,17 +221,46 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                                     placeholder="https://..."
                                 />
                             </div>
-                             <div className="space-y-2">
-                                <label className="text-xs font-semibold text-slate-600">Enlace PDF (URL)</label>
-                                <input 
-                                    type="text" 
-                                    value={editData.pdf_informe || ''} 
-                                    onChange={(e) => handleInputChange('pdf_informe', e.target.value)}
-                                    className="w-full p-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    placeholder="https://..."
-                                />
+                            
+                            {/* Admin Upload Section */}
+                            <div className="space-y-2 pt-2 border-t border-indigo-200">
+                                <label className="text-xs font-semibold text-slate-600 block mb-1">Cargar Documento Maestro (PDF/Word)</label>
+                                
+                                {editData.archivo_nombre ? (
+                                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
+                                            <span className="text-xs text-slate-600 truncate">{editData.archivo_nombre}</span>
+                                        </div>
+                                        <button onClick={handleRemoveFile} className="p-1 hover:bg-red-50 text-red-500 rounded transition-colors">
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-indigo-300 bg-white hover:bg-indigo-50 rounded-lg p-4 cursor-pointer text-center transition-colors group"
+                                    >
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef} 
+                                            className="hidden" 
+                                            accept=".pdf,.doc,.docx"
+                                            onChange={handleFileUpload}
+                                        />
+                                        <UploadCloud className="h-6 w-6 mx-auto text-indigo-400 group-hover:text-indigo-600 mb-1" />
+                                        <span className="text-xs text-indigo-500 font-medium block">Click para subir archivo</span>
+                                        <span className="text-[10px] text-slate-400">Máx 1MB (PDF/DOC)</span>
+                                    </div>
+                                )}
+                                {uploadError && (
+                                    <div className="flex items-center gap-1 text-xs text-red-500 mt-1">
+                                        <AlertCircle className="h-3 w-3" /> {uploadError}
+                                    </div>
+                                )}
                             </div>
-                            <button onClick={handleSave} className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm">
+
+                            <button onClick={handleSave} className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm mt-4">
                                 <Save className="h-4 w-4" /> {isCreating ? 'Crear Instrumento' : 'Guardar Cambios'}
                             </button>
                         </div>
@@ -228,21 +320,52 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                         </div>
                     </div>
 
-                    {editData.enlace && (
-                        <a href={editData.enlace} target="_blank" rel="noreferrer" className="group flex items-center justify-center gap-2 w-full p-4 rounded-xl text-white font-semibold text-sm hover:brightness-110 transition-all shadow-lg transform hover:-translate-y-0.5" style={{ backgroundColor: CALI.TURQUESA }}>
-                            Acceder al Instrumento / Observatorio
-                            <ExternalLink className="h-4 w-4 group-hover:ml-1 transition-all" />
-                        </a>
-                    )}
-                    
-                    {editData.pdf_informe && (
-                         <a href={editData.pdf_informe} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full p-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors hover:border-slate-300">
-                            <FileText className="h-4 w-4 text-rose-500" /> Ver Documento PDF
-                        </a>
-                    )}
+                    {/* Sección Repositorio Documental */}
+                    <div className="space-y-3">
+                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <File className="h-4 w-4 text-rose-500" />
+                            Repositorio Documental
+                        </h4>
+                        
+                        <div className="space-y-3">
+                            {/* Descarga de Archivo Local (Subido por Admin) */}
+                            {editData.archivo_nombre ? (
+                                <button 
+                                    onClick={handleDownloadFile}
+                                    className="flex items-center justify-between w-full p-4 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group text-left"
+                                >
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <div className="p-2 bg-rose-50 text-rose-500 rounded-lg group-hover:bg-rose-100 transition-colors">
+                                            <FileText className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <span className="text-sm font-bold text-slate-700 block truncate">{editData.archivo_nombre}</span>
+                                            <span className="text-[10px] text-slate-400 uppercase font-semibold">Documento Oficial</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
+                                        <Download className="h-4 w-4" />
+                                    </div>
+                                </button>
+                            ) : (
+                                <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-center">
+                                    <p className="text-xs text-slate-400 italic">No hay documento oficial cargado.</p>
+                                </div>
+                            )}
+
+                            {/* Enlace Externo (URL) */}
+                            {editData.enlace && (
+                                <a href={editData.enlace} target="_blank" rel="noreferrer" className="group flex items-center justify-center gap-2 w-full p-3 rounded-xl text-white font-semibold text-xs hover:brightness-110 transition-all shadow-md transform hover:-translate-y-0.5" style={{ backgroundColor: CALI.TURQUESA }}>
+                                    Visitar Sitio Web / Observatorio
+                                    <ExternalLink className="h-3.5 w-3.5 group-hover:ml-1 transition-all" />
+                                </a>
+                            )}
+                        </div>
+                    </div>
 
                 </div>
             </div>
         </>
     );
 };
+    

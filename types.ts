@@ -1,3 +1,4 @@
+
 export type EjeEstrategico = 
   | 'Bienestar Basado en la Interculturalidad'
   | 'Territorio Adaptativo e Inteligente'
@@ -34,6 +35,10 @@ export interface Instrumento {
     enlace?: string;
     pdf_informe?: string;
     description?: string; // Simulated backend field
+    // Campos para carga de archivo local
+    archivo_nombre?: string;
+    archivo_base64?: string;
+    archivo_tipo?: string;
 }
 
 export interface Stats {
