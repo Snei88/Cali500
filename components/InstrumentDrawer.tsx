@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Settings, Save, CheckCircle2, Activity, ExternalLink, FileText, Check, UploadCloud, Download, Trash2, File, AlertCircle } from 'lucide-react';
+import { X, Save, CheckCircle2, Activity, ExternalLink, FileText, Check, UploadCloud, Download, Trash2, AlertCircle, FileBarChart, Scale, FolderOpen, CalendarRange, Target, Eye, FileSpreadsheet, File, HardDrive } from 'lucide-react';
 import { Instrumento } from '@/types';
-import { CALI, TYPES_ORDER, AXIS_ORDER, STATUS_ORDER, STATUS_COLORS } from '@/utils/constants';
+import { CALI, AXIS_ORDER, STATUS_COLORS } from '@/utils/constants';
 
 interface InstrumentDrawerProps {
     instrument: Instrumento | null;
@@ -15,7 +15,12 @@ interface InstrumentDrawerProps {
 
 export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, onClose, role, onUpdate, onCreate, isCreating }) => {
     const [editData, setEditData] = useState<Instrumento | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // Refs for file inputs
+    const fileInputMaestroRef = useRef<HTMLInputElement>(null);
+    const fileInputAnalisisRef = useRef<HTMLInputElement>(null);
+    const fileInputLeyRef = useRef<HTMLInputElement>(null);
+
     const [uploadError, setUploadError] = useState('');
 
     useEffect(() => {
@@ -25,11 +30,6 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
 
     if (!editData) return null;
 
-    const handleToggle = (field: keyof Instrumento, value: any) => {
-        const newData = { ...editData, [field]: value };
-        setEditData(newData);
-    }
-    
     const handleInputChange = (field: keyof Instrumento, value: any) => {
         setEditData({ ...editData, [field]: value });
     }
@@ -47,26 +47,27 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
         onClose();
     }
 
-    // --- FILE HANDLING LOGIC ---
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // --- GENERIC FILE HANDLING LOGIC ---
+    
+    const formatFileSize = (base64String: string | undefined) => {
+        if (!base64String) return '0 KB';
+        const sizeInBytes = 4 * Math.ceil((base64String.length / 3)) * 0.5624896334383477;
+        const sizeInKb = sizeInBytes / 1024;
+        if (sizeInKb > 1024) {
+            return `${(sizeInKb / 1024).toFixed(2)} MB`;
+        }
+        return `${sizeInKb.toFixed(0)} KB`;
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, prefix: string) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validación de tamaño (Máximo 1MB para no saturar LocalStorage en el prototipo)
-        if (file.size > 1024 * 1024) {
-            setUploadError('El archivo es demasiado grande. Máximo 1MB para esta demo.');
-            return;
-        }
-
-        // Validación de tipo
-        const allowedTypes = [
-            'application/pdf', 
-            'application/msword', 
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        ];
-        
-        if (!allowedTypes.includes(file.type)) {
-            setUploadError('Solo se permiten archivos PDF o Word (.doc, .docx).');
+        // Validación de seguridad para LocalStorage (5MB límite seguro para demos)
+        // En producción real con Backend, esto sería ilimitado o mucho mayor.
+        const LIMIT_MB = 5;
+        if (file.size > LIMIT_MB * 1024 * 1024) {
+            setUploadError(`El archivo excede el límite seguro del navegador (${LIMIT_MB}MB).`);
             return;
         }
 
@@ -75,69 +76,161 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
             if (evt.target?.result) {
                 setEditData({
                     ...editData,
-                    archivo_nombre: file.name,
-                    archivo_base64: evt.target.result as string,
-                    archivo_tipo: file.type
+                    [`${prefix}nombre`]: file.name,
+                    [`${prefix}base64`]: evt.target.result as string,
+                    [`${prefix}tipo`]: file.type
                 });
                 setUploadError('');
             }
         };
         reader.readAsDataURL(file);
+        
+        e.target.value = ''; // Reset input
     };
 
-    const handleRemoveFile = () => {
+    const handleRemoveFile = (prefix: string) => {
         if (window.confirm('¿Estás seguro de eliminar el documento adjunto?')) {
             setEditData({
                 ...editData,
-                archivo_nombre: undefined,
-                archivo_base64: undefined,
-                archivo_tipo: undefined
+                [`${prefix}nombre`]: undefined,
+                [`${prefix}base64`]: undefined,
+                [`${prefix}tipo`]: undefined
             });
         }
     };
 
-    const handleDownloadFile = () => {
-        if (!editData.archivo_base64 || !editData.archivo_nombre) return;
+    const handleDownloadFile = (prefix: string) => {
+        const base64 = editData[`${prefix}base64` as keyof Instrumento];
+        const nombre = editData[`${prefix}nombre` as keyof Instrumento];
+
+        if (!base64 || !nombre) return;
         
         const link = document.createElement('a');
-        link.href = editData.archivo_base64;
-        link.download = editData.archivo_nombre;
+        link.href = base64 as string;
+        link.download = nombre as string;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
 
+    // Helper: Determine icon based on file type
+    const getFileIcon = (fileName: string) => {
+        if (fileName.endsWith('.pdf')) return FileText;
+        if (fileName.match(/\.(xls|xlsx|csv)$/)) return FileSpreadsheet;
+        return File;
+    };
+
+    // Helper component for File Upload Box (Admin)
+    const FileUploadBox = ({ title, prefix, inputRef, icon: DefaultIcon, colorClass }: { title: string, prefix: string, inputRef: React.RefObject<HTMLInputElement>, icon: any, colorClass: string }) => {
+        const fileName = editData[`${prefix}nombre` as keyof Instrumento] as string;
+        const fileBase64 = editData[`${prefix}base64` as keyof Instrumento] as string;
+        const DisplayIcon = fileName ? getFileIcon(fileName) : DefaultIcon;
+        
+        return (
+            <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600 block mb-1 flex items-center gap-1.5">
+                    <DefaultIcon className={`h-3.5 w-3.5 ${colorClass}`} />
+                    {title}
+                </label>
+                {fileName ? (
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="p-2 bg-slate-100 rounded text-slate-500 relative">
+                                <DisplayIcon className="h-4 w-4" />
+                                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full w-2 h-2 border border-white"></div>
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-xs text-slate-700 truncate font-medium max-w-[150px]" title={fileName}>{fileName}</span>
+                                <span className="text-[10px] text-slate-400">{formatFileSize(fileBase64)}</span>
+                            </div>
+                        </div>
+                        <button onClick={() => handleRemoveFile(prefix)} className="p-1.5 hover:bg-red-50 text-red-500 rounded transition-colors" title="Eliminar archivo">
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                ) : (
+                    <div 
+                        onClick={() => inputRef.current?.click()}
+                        className="border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-white hover:border-indigo-400 rounded-lg p-4 cursor-pointer text-center transition-all group flex flex-col items-center gap-2"
+                    >
+                        <input 
+                            type="file" 
+                            ref={inputRef} 
+                            className="hidden" 
+                            // Sin restricciones de accept para permitir todo tipo
+                            onChange={(e) => handleFileUpload(e, prefix)}
+                        />
+                        <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                        <span className="text-xs text-slate-500 group-hover:text-indigo-600 font-medium">Click para cargar archivo</span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // Helper component for File Download Button (User)
+    const FileDownloadButton = ({ title, prefix, icon: Icon, colorClass, bgClass, description }: { title: string, prefix: string, icon: any, colorClass: string, bgClass: string, description: string }) => {
+        const fileName = editData[`${prefix}nombre` as keyof Instrumento] as string;
+        const fileBase64 = editData[`${prefix}base64` as keyof Instrumento] as string;
+
+        if (!fileName) return null;
+        const DisplayIcon = getFileIcon(fileName);
+
+        return (
+            <button 
+                onClick={() => handleDownloadFile(prefix)}
+                className="flex items-center justify-between w-full p-3 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group text-left"
+            >
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <div className={`p-2.5 ${bgClass} ${colorClass} rounded-lg group-hover:scale-105 transition-transform`}>
+                        <DisplayIcon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5 block">{title}</span>
+                        <span className="text-xs font-bold text-slate-700 block truncate leading-tight">{fileName}</span>
+                        <span className="text-[9px] text-slate-400 mt-0.5">{formatFileSize(fileBase64)}</span>
+                    </div>
+                </div>
+                <div className="p-2 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                    <Download className="h-4 w-4" />
+                </div>
+            </button>
+        );
+    };
+
+    const isAdmin = role === 'administrador';
+
     return (
         <>
             <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-40 transition-opacity animate-in fade-in duration-300" onClick={onClose}></div>
-            <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col slide-in-right">
+            <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col slide-in-right border-l border-slate-100">
                 {/* Header */}
-                <div className="h-44 relative shrink-0 overflow-hidden" style={{ backgroundColor: CALI.MORADO }}>
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-[#1E1B4B] opacity-50"></div>
-                    {/* Decorative circles */}
-                    <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-                    <div className="absolute left-10 bottom-10 h-20 w-20 rounded-full bg-cyan-500/10 blur-xl"></div>
+                <div className="h-40 relative shrink-0 overflow-hidden" style={{ backgroundColor: CALI.MORADO }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-[#1E1B4B] opacity-90"></div>
+                    <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                    <div className="absolute left-8 bottom-[-20px] h-24 w-24 rounded-full bg-cyan-500/20 blur-xl"></div>
                     
                     <div className="relative h-full p-6 flex flex-col justify-end text-white">
                         <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors">
                             <X className="h-5 w-5" />
                         </button>
                         <div className="flex flex-wrap gap-2 mb-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 border border-white/10 backdrop-blur-sm">
-                                {isCreating ? 'NUEVO' : `ID: ${editData.id}`}
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 border border-white/10 backdrop-blur-sm shadow-sm">
+                                {isCreating ? 'NUEVO REGISTRO' : `ID: ${editData.id}`}
                             </span>
-                            {!isCreating && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/20 backdrop-blur-sm">{editData.tipo}</span>}
+                            {!isCreating && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-200 border border-cyan-500/20 backdrop-blur-sm">{editData.tipo}</span>}
                         </div>
                         {isCreating ? (
                             <input 
                                 type="text" 
                                 value={editData.nombre} 
                                 onChange={(e) => handleInputChange('nombre', e.target.value)}
-                                placeholder="Nombre del Instrumento..."
-                                className="text-xl font-bold leading-tight bg-transparent border-b border-white/30 outline-none w-full placeholder-white/50 focus:border-white transition-colors"
+                                placeholder="Nombre del Instrumento"
+                                className="bg-transparent text-xl font-bold placeholder-white/50 border-b border-white/20 pb-1 focus:border-white focus:outline-none w-full"
+                                autoFocus
                             />
                         ) : (
-                            <h2 className="text-xl font-bold leading-tight">{editData.nombre}</h2>
+                            <h2 className="text-xl font-bold leading-tight drop-shadow-md">{editData.nombre}</h2>
                         )}
                     </div>
                 </div>
@@ -145,227 +238,301 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 custom-scrollbar">
                     
-                    {role === 'administrador' && (
-                        <div className="bg-indigo-50 p-5 rounded-xl border border-indigo-100 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2 mb-2 text-indigo-800 font-bold text-sm border-b border-indigo-200 pb-2">
-                                <Settings className="h-4 w-4" />
-                                {isCreating ? 'Configuración Inicial' : 'Panel de Gestión (Administrador)'}
+                    {/* SECCIÓN 1: INFORMACIÓN GENERAL */}
+                    <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
+                        <div className="absolute top-4 left-0 w-1 h-8 bg-indigo-500 rounded-r"></div>
+                        <h3 className="text-sm font-bold text-slate-800 mb-4 pl-2 flex items-center gap-2">
+                            Información General
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            {/* Vigencia */}
+                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                <div className="flex items-center gap-2">
+                                    <CalendarRange className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-semibold text-slate-600 uppercase">Vigencia</span>
+                                </div>
+                                <div className="text-sm font-bold text-slate-800">
+                                    {isCreating || isAdmin ? (
+                                        <div className="flex items-center gap-1">
+                                            <input 
+                                                type="number" 
+                                                className="bg-white w-16 text-center border border-slate-200 rounded px-1 text-xs py-0.5 focus:border-indigo-500 outline-none" 
+                                                value={editData.inicio} 
+                                                onChange={(e) => handleInputChange('inicio', Number(e.target.value))} 
+                                                disabled={!isAdmin && !isCreating}
+                                            /> 
+                                            <span className="text-slate-400">-</span>
+                                            <input 
+                                                type="text" 
+                                                className="bg-white w-20 text-center border border-slate-200 rounded px-1 text-xs py-0.5 focus:border-indigo-500 outline-none" 
+                                                value={editData.fin} 
+                                                onChange={(e) => handleInputChange('fin', e.target.value === 'Permanente' ? 'Permanente' : Number(e.target.value))} 
+                                                disabled={!isAdmin && !isCreating}
+                                            />
+                                        </div>
+                                    ) : (
+                                        `${editData.inicio} - ${editData.fin}`
+                                    )}
+                                </div>
                             </div>
-                            
-                            {isCreating && (
-                                <>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-slate-600">Tipo de Instrumento</label>
+
+                            {/* Estado y Temporalidad */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1.5">Estado</span>
+                                    {isAdmin || isCreating ? (
                                         <select 
-                                            value={editData.tipo} 
-                                            onChange={(e) => handleInputChange('tipo', e.target.value)}
-                                            className="w-full p-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        >
-                                            {TYPES_ORDER.map(t => <option key={t} value={t}>{t}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-slate-600">Eje Estratégico</label>
-                                        <select 
-                                            value={editData.eje} 
-                                            onChange={(e) => handleInputChange('eje', e.target.value)}
-                                            className="w-full p-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        >
-                                            {AXIS_ORDER.map(a => <option key={a} value={a}>{a}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-600">Año Inicio</label>
-                                            <input type="number" value={editData.inicio} onChange={(e) => handleInputChange('inicio', parseInt(e.target.value))} className="w-full p-2 text-sm border border-slate-300 rounded-md" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-600">Año Fin</label>
-                                            <input type="number" value={editData.fin === 'Permanente' ? 2050 : editData.fin} onChange={(e) => handleInputChange('fin', parseInt(e.target.value))} className="w-full p-2 text-sm border border-slate-300 rounded-md" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-slate-600">Estado</label>
-                                        <select 
-                                            value={editData.estado} 
+                                            className="w-full text-xs font-semibold p-2 rounded border border-slate-200 bg-white focus:border-indigo-500 outline-none"
+                                            value={editData.estado}
                                             onChange={(e) => handleInputChange('estado', e.target.value)}
-                                            className="w-full p-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
                                         >
-                                            {STATUS_ORDER.map(s => <option key={s} value={s}>{s}</option>)}
+                                            {Object.keys(STATUS_COLORS).map(st => <option key={st} value={st}>{st}</option>)}
                                         </select>
+                                    ) : (
+                                        <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-bold border ${STATUS_COLORS[editData.estado]}`}>
+                                            {editData.estado}
+                                        </span>
+                                    )}
+                                </div>
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1.5">Temporalidad</span>
+                                    {isAdmin || isCreating ? (
+                                        <input 
+                                            type="text" 
+                                            className="w-full text-xs font-semibold p-2 rounded border border-slate-200 bg-white focus:border-indigo-500 outline-none"
+                                            value={editData.temporalidad}
+                                            onChange={(e) => handleInputChange('temporalidad', e.target.value)}
+                                        />
+                                    ) : (
+                                        <span className="text-xs font-semibold text-slate-700 block p-1">{editData.temporalidad}</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Eje */}
+                            <div>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1.5 flex items-center gap-1">
+                                    <Target className="h-3 w-3" /> Eje Estratégico
+                                </span>
+                                {isAdmin || isCreating ? (
+                                    <select 
+                                        className="w-full text-xs font-semibold p-2 rounded border border-slate-200 bg-white focus:border-indigo-500 outline-none"
+                                        value={editData.eje}
+                                        onChange={(e) => handleInputChange('eje', e.target.value)}
+                                    >
+                                        {AXIS_ORDER.map(ax => <option key={ax} value={ax}>{ax}</option>)}
+                                    </select>
+                                ) : (
+                                    <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-xs font-medium text-slate-700 leading-snug">
+                                        {editData.eje}
                                     </div>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* SECCIÓN 2: SEGUIMIENTO Y MONITOREO */}
+                    <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
+                        <div className="absolute top-4 left-0 w-1 h-8 bg-emerald-500 rounded-r"></div>
+                        <h3 className="text-sm font-bold text-slate-800 mb-4 pl-2 flex items-center gap-2">
+                            Seguimiento y Monitoreo
+                        </h3>
+
+                        {isAdmin ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    <span className="text-xs font-semibold text-slate-600">¿Requiere Seguimiento?</span>
+                                    <button 
+                                        onClick={() => handleInputChange('seguimiento', editData.seguimiento === 'Si' ? 'No' : 'Si')}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-2 ${editData.seguimiento === 'Si' ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-slate-200 border-slate-300 text-slate-500'}`}
+                                    >
+                                        {editData.seguimiento === 'Si' ? <CheckCircle2 className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                                        {editData.seguimiento === 'Si' ? 'SI' : 'NO'}
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-600 block mb-1.5 flex items-center gap-1.5">
+                                        <Eye className="h-3.5 w-3.5 text-violet-500" />
+                                        Mecanismo / Observatorio Asociado
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        value={editData.observatorio || ''}
+                                        onChange={(e) => handleInputChange('observatorio', e.target.value)}
+                                        placeholder="Ej: Observatorio de Seguridad..."
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 outline-none transition-all"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1 pl-1">Dejar vacío si no cuenta con un mecanismo definido.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-3">
+                                <div className={`p-3 rounded-lg border flex items-center justify-between ${editData.seguimiento === 'Si' ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                                    <span className="text-xs font-medium text-slate-600">Requiere Seguimiento</span>
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${editData.seguimiento === 'Si' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
+                                        {editData.seguimiento === 'Si' ? 'SI' : 'NO'}
+                                    </span>
+                                </div>
+                                {editData.observatorio && (
+                                    <div className="p-3 rounded-lg border border-violet-100 bg-violet-50/50">
+                                        <span className="text-[10px] text-violet-400 font-bold uppercase block mb-1">Mecanismo / Observatorio</span>
+                                        <div className="flex items-center gap-2 text-violet-700 font-semibold text-xs">
+                                            <Eye className="h-3.5 w-3.5" />
+                                            {editData.observatorio}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </section>
+
+                    {/* SECCIÓN 3: REPOSITORIO DIGITAL */}
+                    <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
+                        <div className="absolute top-4 left-0 w-1 h-8 bg-amber-500 rounded-r"></div>
+                        <div className="flex items-center justify-between mb-4 pl-2">
+                            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                Repositorio Digital
+                            </h3>
+                            {uploadError && (
+                                <span title={uploadError} className="animate-pulse">
+                                    <AlertCircle className="h-4 w-4 text-red-500" />
+                                </span>
+                            )}
+                        </div>
+
+                        {uploadError && (
+                            <div className="mb-4 p-2 bg-red-50 text-red-600 text-xs rounded border border-red-100">
+                                {uploadError}
+                            </div>
+                        )}
+
+                        <div className="mb-4 flex items-center gap-2 p-2 bg-indigo-50 text-indigo-700 rounded-lg text-[10px]">
+                            <HardDrive className="h-3.5 w-3.5" />
+                            <span>Almacenamiento Local (Browser) • Máx 5MB</span>
+                        </div>
+
+                        <div className="space-y-5">
+                            {/* Slots de Documentos */}
+                            {isAdmin ? (
+                                <>
+                                    <FileUploadBox 
+                                        title="Documento Maestro (Plan/Política)" 
+                                        prefix="archivo_" 
+                                        inputRef={fileInputMaestroRef} 
+                                        icon={FileText} 
+                                        colorClass="text-indigo-500"
+                                    />
+                                    <div className="h-px bg-slate-100"></div>
+                                    <FileUploadBox 
+                                        title="Análisis Técnico / Reporte de Seguimiento" 
+                                        prefix="archivo_analisis_" 
+                                        inputRef={fileInputAnalisisRef} 
+                                        icon={FileBarChart} 
+                                        colorClass="text-amber-500"
+                                    />
+                                    <div className="h-px bg-slate-100"></div>
+                                    <FileUploadBox 
+                                        title="Marco Normativo (Ley/Acuerdo/Decreto)" 
+                                        prefix="archivo_ley_" 
+                                        inputRef={fileInputLeyRef} 
+                                        icon={Scale} 
+                                        colorClass="text-emerald-600"
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    {(!editData.archivo_nombre && !editData.archivo_analisis_nombre && !editData.archivo_ley_nombre) ? (
+                                        <div className="text-center py-8 text-slate-400 text-xs border-2 border-dashed border-slate-100 rounded-lg">
+                                            <FolderOpen className="h-8 w-8 mx-auto mb-2 text-slate-200" />
+                                            No hay documentos digitales disponibles en este momento.
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <FileDownloadButton 
+                                                title="Documento Maestro" 
+                                                prefix="archivo_" 
+                                                icon={FileText} 
+                                                colorClass="text-indigo-600" 
+                                                bgClass="bg-indigo-50"
+                                                description="Documento principal del instrumento"
+                                            />
+                                            <FileDownloadButton 
+                                                title="Análisis Técnico" 
+                                                prefix="archivo_analisis_" 
+                                                icon={FileBarChart} 
+                                                colorClass="text-amber-600" 
+                                                bgClass="bg-amber-50"
+                                                description="Reporte de análisis y seguimiento"
+                                            />
+                                            <FileDownloadButton 
+                                                title="Marco Normativo" 
+                                                prefix="archivo_ley_" 
+                                                icon={Scale} 
+                                                colorClass="text-emerald-700" 
+                                                bgClass="bg-emerald-50"
+                                                description="Política pública o ley asociada"
+                                            />
+                                        </div>
+                                    )}
                                 </>
                             )}
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <button 
-                                    onClick={() => handleToggle('seguimiento', editData.seguimiento === 'Si' ? 'No' : 'Si')}
-                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1 ${editData.seguimiento === 'Si' ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
-                                >
-                                    {editData.seguimiento === 'Si' ? <><Check className="w-3.5 h-3.5"/> Con Seguimiento</> : <><X className="w-3.5 h-3.5"/> Sin Seguimiento</>}
-                                </button>
-                                <button 
-                                    onClick={() => handleToggle('observatorio', editData.observatorio === 'Observatorio' || editData.observatorio === 'Si' ? '' : 'Observatorio')}
-                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1 ${editData.observatorio ? 'bg-violet-100 border-violet-300 text-violet-800' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
-                                >
-                                    {editData.observatorio ? <><Check className="w-3.5 h-3.5"/> Con Observatorio</> : <><X className="w-3.5 h-3.5"/> Sin Observatorio</>}
-                                </button>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-slate-600">Enlace Documento (URL Externa)</label>
-                                <input 
-                                    type="text" 
-                                    value={editData.enlace || ''} 
-                                    onChange={(e) => handleInputChange('enlace', e.target.value)}
-                                    className="w-full p-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    placeholder="https://..."
-                                />
-                            </div>
-                            
-                            {/* Admin Upload Section */}
-                            <div className="space-y-2 pt-2 border-t border-indigo-200">
-                                <label className="text-xs font-semibold text-slate-600 block mb-1">Cargar Documento Maestro (PDF/Word)</label>
-                                
-                                {editData.archivo_nombre ? (
-                                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
-                                        <div className="flex items-center gap-2 overflow-hidden">
-                                            <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
-                                            <span className="text-xs text-slate-600 truncate">{editData.archivo_nombre}</span>
-                                        </div>
-                                        <button onClick={handleRemoveFile} className="p-1 hover:bg-red-50 text-red-500 rounded transition-colors">
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div 
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="border-2 border-dashed border-indigo-300 bg-white hover:bg-indigo-50 rounded-lg p-4 cursor-pointer text-center transition-colors group"
-                                    >
-                                        <input 
-                                            type="file" 
-                                            ref={fileInputRef} 
-                                            className="hidden" 
-                                            accept=".pdf,.doc,.docx"
-                                            onChange={handleFileUpload}
-                                        />
-                                        <UploadCloud className="h-6 w-6 mx-auto text-indigo-400 group-hover:text-indigo-600 mb-1" />
-                                        <span className="text-xs text-indigo-500 font-medium block">Click para subir archivo</span>
-                                        <span className="text-[10px] text-slate-400">Máx 1MB (PDF/DOC)</span>
-                                    </div>
-                                )}
-                                {uploadError && (
-                                    <div className="flex items-center gap-1 text-xs text-red-500 mt-1">
-                                        <AlertCircle className="h-3 w-3" /> {uploadError}
-                                    </div>
-                                )}
-                            </div>
-
-                            <button onClick={handleSave} className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm mt-4">
-                                <Save className="h-4 w-4" /> {isCreating ? 'Crear Instrumento' : 'Guardar Cambios'}
-                            </button>
                         </div>
-                    )}
+                    </section>
 
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                             <span className="text-xs font-semibold text-slate-500 uppercase">Vigencia</span>
-                             <span className="text-sm font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">{editData.inicio} - {editData.fin}</span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <span className="text-xs text-slate-400 block mb-1">Estado</span>
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border inline-block ${STATUS_COLORS[editData.estado]}`}>{editData.estado}</span>
-                            </div>
-                            <div>
-                                <span className="text-xs text-slate-400 block mb-1">Temporalidad</span>
-                                <span className="text-sm font-medium text-slate-700">{editData.temporalidad}</span>
-                            </div>
-                        </div>
-
-                        <div className="pt-2">
-                            <span className="text-xs text-slate-400 block mb-1">Eje Estratégico</span>
-                            <div className="font-medium text-slate-800 text-sm p-3 bg-slate-50 rounded-lg border border-slate-100">{editData.eje}</div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <Activity className="h-4 w-4 text-indigo-500" />
-                            Seguimiento y Monitoreo
-                        </h4>
-                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600">¿Requiere seguimiento?</span>
-                                {editData.seguimiento === 'Si' ? (
-                                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
-                                        <CheckCircle2 className="h-3.5 w-3.5" /> SI
-                                    </span>
-                                ) : (
-                                    <span className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                                        No aplica
-                                    </span>
-                                )}
-                            </div>
-                            
-                            {editData.observatorio && (
-                                <div className="pt-3 border-t border-slate-100">
-                                    <span className="text-xs text-slate-400 block mb-1">Mecanismo / Observatorio Asociado</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                                        <span className="text-sm font-medium text-slate-700">{editData.observatorio}</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Sección Repositorio Documental */}
-                    <div className="space-y-3">
-                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <File className="h-4 w-4 text-rose-500" />
-                            Repositorio Documental
-                        </h4>
-                        
-                        <div className="space-y-3">
-                            {/* Descarga de Archivo Local (Subido por Admin) */}
-                            {editData.archivo_nombre ? (
-                                <button 
-                                    onClick={handleDownloadFile}
-                                    className="flex items-center justify-between w-full p-4 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group text-left"
-                                >
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className="p-2 bg-rose-50 text-rose-500 rounded-lg group-hover:bg-rose-100 transition-colors">
-                                            <FileText className="h-5 w-5" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <span className="text-sm font-bold text-slate-700 block truncate">{editData.archivo_nombre}</span>
-                                            <span className="text-[10px] text-slate-400 uppercase font-semibold">Documento Oficial</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-2 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
-                                        <Download className="h-4 w-4" />
-                                    </div>
-                                </button>
-                            ) : (
-                                <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-center">
-                                    <p className="text-xs text-slate-400 italic">No hay documento oficial cargado.</p>
+                    {/* ENLACES EXTERNOS (Si existen, para complementar) */}
+                    {(editData.enlace || editData.pdf_informe || isAdmin) && (
+                        <div className="space-y-3 pt-2">
+                            {isAdmin && (
+                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                                    <h4 className="text-xs font-bold text-slate-500 uppercase">Enlaces Externos (Opcional)</h4>
+                                    <input 
+                                        type="text" 
+                                        value={editData.enlace || ''} 
+                                        onChange={(e) => handleInputChange('enlace', e.target.value)}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-xs focus:border-indigo-500 outline-none"
+                                        placeholder="URL Sitio Web del Instrumento"
+                                    />
+                                    <input 
+                                        type="text" 
+                                        value={editData.pdf_informe || ''} 
+                                        onChange={(e) => handleInputChange('pdf_informe', e.target.value)}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-xs focus:border-indigo-500 outline-none"
+                                        placeholder="URL PDF Externo (Si aplica)"
+                                    />
                                 </div>
                             )}
 
-                            {/* Enlace Externo (URL) */}
-                            {editData.enlace && (
-                                <a href={editData.enlace} target="_blank" rel="noreferrer" className="group flex items-center justify-center gap-2 w-full p-3 rounded-xl text-white font-semibold text-xs hover:brightness-110 transition-all shadow-md transform hover:-translate-y-0.5" style={{ backgroundColor: CALI.TURQUESA }}>
-                                    Visitar Sitio Web / Observatorio
-                                    <ExternalLink className="h-3.5 w-3.5 group-hover:ml-1 transition-all" />
+                            {!isAdmin && editData.enlace && (
+                                <a 
+                                    href={editData.enlace} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="group flex items-center justify-center gap-2 w-full p-4 rounded-xl text-white font-semibold text-sm shadow-lg transform hover:-translate-y-0.5 transition-all"
+                                    style={{ backgroundColor: CALI.TURQUESA }}
+                                >
+                                    Visitar Sitio Web Oficial
+                                    <ExternalLink className="h-4 w-4 group-hover:ml-1 transition-all" />
                                 </a>
                             )}
                         </div>
-                    </div>
+                    )}
 
+                    {/* Save Button (Admin) */}
+                    {role === 'administrador' && (
+                        <div className="pt-4 sticky bottom-0 bg-slate-50 pb-2 z-10">
+                            <button 
+                                onClick={handleSave}
+                                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-xl shadow-indigo-600/20"
+                            >
+                                <Save className="h-4 w-4" />
+                                {isCreating ? 'Crear Instrumento' : 'Guardar Cambios'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
     );
 };
-    
