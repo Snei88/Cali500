@@ -1,12 +1,40 @@
 
-// URL del Backend (Cámbiala cuando despliegues el server.js)
-const API_URL = 'http://localhost:5000/api'; 
+
+// Configuración de la API
+
+// -----------------------------------------------------------------------------
+// PASO ÚNICO PARA CONECTAR:
+// Cuando generes tu dominio público en Zeabur (ej: https://vision-cali.zeabur.app),
+// pégalo dentro de las comillas de abajo.
+// -----------------------------------------------------------------------------
+const ZEABUR_DOMAIN: string = 'https://cali500baceknd.zeabur.app'; 
+
+const getBaseUrl = () => {
+    // 1. Si hay un dominio de Zeabur configurado, construimos la ruta API.
+    if (ZEABUR_DOMAIN) {
+        // Quitamos la barra al final si el usuario la puso (ej: .app/ -> .app)
+        const cleanDomain = (ZEABUR_DOMAIN as string).replace(/\/$/, ""); 
+        return `${cleanDomain}/api`;
+    }
+
+    // 2. Si estamos corriendo en localhost (tu PC), usa el puerto 5000
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        return 'http://localhost:5000/api';
+    }
+
+    // 3. Fallback: Si estamos en producción (GitHub Pages) pero olvidaste poner la URL
+    console.warn("⚠️ ADVERTENCIA: Estás en producción pero no has configurado la URL del backend.");
+    return 'http://localhost:5000/api';
+};
+
+const API_URL = getBaseUrl();
 
 export const checkBackendHealth = async (): Promise<boolean> => {
     try {
         const response = await fetch(`${API_URL}/health`);
         return response.ok;
     } catch (error) {
+        console.log("Backend offline o error de red:", error);
         return false;
     }
 };
@@ -32,11 +60,11 @@ export const uploadFileToBackend = async (file: File, onProgress: (percent: numb
                 const response = JSON.parse(xhr.responseText);
                 resolve(response.file); // Retorna metadata del archivo (filename, id)
             } else {
-                reject(new Error('Error en la subida'));
+                reject(new Error('Error en la subida: ' + xhr.statusText));
             }
         };
 
-        xhr.onerror = () => reject(new Error('Error de red'));
+        xhr.onerror = () => reject(new Error('Error de red al conectar con el servidor'));
         xhr.send(formData);
     });
 };
