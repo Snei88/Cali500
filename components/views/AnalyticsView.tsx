@@ -30,7 +30,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                         <BarChart3 className="h-5 w-5" />
                         Distribución por Tipo de Documento
                     </h3>
-                    <div className="flex-1 w-full min-w-0 min-h-0">
+                    {/* FIX: Se añade min-h-[200px] para evitar error width(-1) de Recharts */}
+                    <div className="flex-1 w-full min-w-0 min-h-[200px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byType} layout="vertical" margin={{ left: 40, right: 20, top: 10, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
@@ -53,7 +54,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                         <Target className="h-5 w-5" />
                         Distribución por Eje Estratégico
                     </h3>
-                    <div className="flex-1 w-full min-w-0 min-h-0">
+                    <div className="flex-1 w-full min-w-0 min-h-[200px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byEje} margin={{ top: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -92,7 +93,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                     <PieChart className="h-5 w-5" />
                     Seguimiento
                 </h3>
-                <div className="flex-1 relative w-full min-w-0 min-h-0">
+                <div className="flex-1 relative w-full min-w-0 min-h-[200px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <RePieChart>
                             <Pie
