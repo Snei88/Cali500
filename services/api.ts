@@ -2,7 +2,7 @@
 // Configuración de la API
 
 // URL del Backend (Zeabur)
-const ZEABUR_DOMAIN = 'https://cali500baceknd.zeabur.app';
+const ZEABUR_DOMAIN = 'https://caliback.zeabur.app';
 
 const getBaseUrl = () => {
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
