@@ -1,25 +1,15 @@
 
 // Configuración de la API
 
-// URL del Backend (Zeabur)
-const ZEABUR_DOMAIN = 'https://caliback.zeabur.app';
-
-const getBaseUrl = () => {
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-        console.log("🌍 [API] Entorno: Producción (Zeabur)");
-        return `${ZEABUR_DOMAIN}/api`;
-    }
-    console.log("🏠 [API] Entorno: Localhost");
-    return 'http://localhost:8080/api';
-};
-
-const API_URL = getBaseUrl();
+// FORZAMOS ENTORNO LOCAL PARA PRUEBAS
+const API_URL = 'http://localhost:8080/api';
 
 export const checkBackendHealth = async (): Promise<boolean> => {
     console.log(`🩺 [API] Verificando salud del sistema en: ${API_URL}/health`);
     
+    // Timeout corto para local
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
 
     try {
         const response = await fetch(`${API_URL}/health`, { 
@@ -29,25 +19,15 @@ export const checkBackendHealth = async (): Promise<boolean> => {
         });
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
-            console.error(`❌ [API] Error HTTP: ${response.status}`);
-            return false;
-        }
+        if (!response.ok) return false;
         
         const data = await response.json();
-        console.log("📦 [API] Respuesta del Servidor:", data);
+        console.log("📦 [API Local] Respuesta:", data);
         
-        // 1 = Conectado
-        if (data.dbState === 1) {
-            console.log("✅ [API] Conexión Establecida y DB Lista.");
-            return true;
-        } else {
-            console.warn(`⚠️ [API] Backend responde, pero DB no está lista (Estado: ${data.dbState})`);
-            return false;
-        }
+        return data.dbState === 1;
 
     } catch (error) {
-        console.error("🔥 [API] Error de Red/CORS:", error);
+        console.error("🔥 [API Local] El servidor local no responde. Asegurate de ejecutar 'node server.js'", error);
         return false;
     }
 };
@@ -55,7 +35,7 @@ export const checkBackendHealth = async (): Promise<boolean> => {
 export const uploadFileToBackend = async (file: File, onProgress: (percent: number) => void): Promise<any> => {
     return new Promise((resolve, reject) => {
         const uploadUrl = `${API_URL}/upload`;
-        console.log(`🚀 [API] Subiendo archivo a: ${uploadUrl}`);
+        console.log(`🚀 [API] Subiendo a Local: ${uploadUrl}`);
 
         const xhr = new XMLHttpRequest();
         const formData = new FormData();
@@ -74,21 +54,19 @@ export const uploadFileToBackend = async (file: File, onProgress: (percent: numb
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    console.log("✅ [API] Carga completada:", response);
+                    console.log("✅ [API] Subida completada:", response);
                     resolve(response.file || response);
                 } catch (e) {
-                    console.error("❌ [API] Error parseando respuesta JSON");
                     reject(new Error('Respuesta inválida del servidor'));
                 }
             } else {
-                console.error(`❌ [API] Fallo en servidor: ${xhr.responseText}`);
-                reject(new Error(`Error ${xhr.status}: Fallo al guardar archivo. Ver logs del servidor.`));
+                console.error(`❌ [API] Error Server: ${xhr.responseText}`);
+                reject(new Error(`Error ${xhr.status}: ${xhr.responseText}`));
             }
         };
 
         xhr.onerror = () => {
-            console.error("🔥 [API] Error de Red (Posible bloqueo CORS)");
-            reject(new Error('Error de conexión. Verifica que el backend esté activo.'));
+            reject(new Error('Error de conexión con localhost.'));
         };
         
         xhr.send(formData);
