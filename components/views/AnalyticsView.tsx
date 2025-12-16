@@ -25,13 +25,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Chart: By Type */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
                     <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
                         <BarChart3 className="h-5 w-5" />
                         Distribución por Tipo de Documento
                     </h3>
-                    {/* FIX: Se añade min-h-[200px] para evitar error width(-1) de Recharts */}
-                    <div className="flex-1 w-full min-w-0 min-h-[200px]">
+                    <div className="w-full h-60">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byType} layout="vertical" margin={{ left: 40, right: 20, top: 10, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
@@ -49,12 +48,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                 </div>
 
                 {/* Chart: By Axis */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
                     <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
                         <Target className="h-5 w-5" />
                         Distribución por Eje Estratégico
                     </h3>
-                    <div className="flex-1 w-full min-w-0 min-h-[200px]">
+                    <div className="w-full h-60">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byEje} margin={{ top: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -74,7 +73,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                 </div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col min-h-[360px]">
                 <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
                     <CheckCircle2 className="h-5 w-5" />
                     Distribución por Estado
@@ -88,12 +87,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
             </div>
 
              {/* Pie Chart: Seguimiento */}
-            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[320px] flex flex-col">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col min-h-[360px]">
                 <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
                     <PieChart className="h-5 w-5" />
                     Seguimiento
                 </h3>
-                <div className="flex-1 relative w-full min-w-0 min-h-[200px]">
+                <div className="w-full h-60">
                     <ResponsiveContainer width="100%" height="100%">
                         <RePieChart>
                             <Pie
