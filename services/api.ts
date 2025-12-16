@@ -3,38 +3,40 @@
 // Configuración de la API
 
 // -----------------------------------------------------------------------------
-// PASO ÚNICO PARA CONECTAR:
-// Cuando generes tu dominio público en Zeabur (ej: https://vision-cali.zeabur.app),
-// pégalo dentro de las comillas de abajo.
+// URL DE PRODUCCIÓN (ZEABUR)
 // -----------------------------------------------------------------------------
 const ZEABUR_DOMAIN: string = 'https://cali500baceknd.zeabur.app'; 
 
 const getBaseUrl = () => {
-    // 1. Si hay un dominio de Zeabur configurado, construimos la ruta API.
+    // Prioridad 1: Dominio de Zeabur configurado
     if (ZEABUR_DOMAIN) {
-        // Quitamos la barra al final si el usuario la puso (ej: .app/ -> .app)
-        const cleanDomain = (ZEABUR_DOMAIN as string).replace(/\/$/, ""); 
+        // Asegurar que no tenga slash al final
+        const cleanDomain = ZEABUR_DOMAIN.replace(/\/$/, ""); 
+        // Si el dominio ya incluye /api (error común), no lo agregamos de nuevo
+        if (cleanDomain.endsWith('/api')) return cleanDomain;
         return `${cleanDomain}/api`;
     }
 
-    // 2. Si estamos corriendo en localhost (tu PC), usa el puerto 5000
+    // Prioridad 2: Localhost
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        return 'http://localhost:5000/api';
+        return 'http://localhost:5000/api'; // O 8080 si lo corres localmente con ese puerto
     }
 
-    // 3. Fallback: Si estamos en producción (GitHub Pages) pero olvidaste poner la URL
-    console.warn("⚠️ ADVERTENCIA: Estás en producción pero no has configurado la URL del backend.");
     return 'http://localhost:5000/api';
 };
 
 const API_URL = getBaseUrl();
 
+console.log("🌐 Conectando a Backend en:", API_URL);
+
 export const checkBackendHealth = async (): Promise<boolean> => {
     try {
         const response = await fetch(`${API_URL}/health`);
-        return response.ok;
+        const data = await response.json();
+        console.log("Health Check Status:", data);
+        return response.ok && data.dbConnected;
     } catch (error) {
-        console.log("Backend offline o error de red:", error);
+        console.error("❌ Backend offline o error de red:", error);
         return false;
     }
 };
@@ -45,7 +47,10 @@ export const uploadFileToBackend = async (file: File, onProgress: (percent: numb
         const formData = new FormData();
         formData.append('file', file);
 
-        xhr.open('POST', `${API_URL}/upload`, true);
+        const uploadUrl = `${API_URL}/upload`;
+        console.log("📤 Subiendo archivo a:", uploadUrl);
+
+        xhr.open('POST', uploadUrl, true);
 
         // Progreso de subida
         xhr.upload.onprogress = (e) => {
@@ -57,14 +62,23 @@ export const uploadFileToBackend = async (file: File, onProgress: (percent: numb
 
         xhr.onload = () => {
             if (xhr.status === 200) {
-                const response = JSON.parse(xhr.responseText);
-                resolve(response.file); // Retorna metadata del archivo (filename, id)
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    resolve(response.file);
+                } catch (e) {
+                    reject(new Error('Respuesta inválida del servidor'));
+                }
             } else {
-                reject(new Error('Error en la subida: ' + xhr.statusText));
+                console.error("Error del servidor:", xhr.responseText);
+                reject(new Error(`Error ${xhr.status}: ${xhr.statusText || 'Fallo en carga'}`));
             }
         };
 
-        xhr.onerror = () => reject(new Error('Error de red al conectar con el servidor'));
+        xhr.onerror = () => {
+            console.error("Error de red XMLHttpRequest");
+            reject(new Error('Error de red al conectar con el servidor. Verifica tu conexión a Internet o el estado del backend.'));
+        };
+        
         xhr.send(formData);
     });
 };

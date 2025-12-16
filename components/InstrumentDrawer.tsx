@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, CheckCircle2, Activity, ExternalLink, FileText, Check, UploadCloud, Download, Trash2, AlertCircle, FileBarChart, Scale, FolderOpen, CalendarRange, Target, Eye, FileSpreadsheet, File, HardDrive, Loader2, Server, Wifi, WifiOff } from 'lucide-react';
 import { Instrumento } from '@/types';
@@ -66,7 +67,7 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
     
     const formatFileSize = (base64String: string | undefined) => {
         if (!base64String) return '0 KB';
-        if (USE_REAL_BACKEND) return 'Archivo en Nube'; // En modo backend no tenemos el peso en string
+        if (base64String === 'STORED_IN_ATLAS' || USE_REAL_BACKEND) return 'Nube'; 
         const sizeInBytes = 4 * Math.ceil((base64String.length / 3)) * 0.5624896334383477;
         const sizeInKb = sizeInBytes / 1024;
         if (sizeInKb > 1024) {
@@ -81,16 +82,21 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
 
         setIsUploading(true);
         setUploadProgress(prev => ({ ...prev, [prefix]: 0 }));
+        setUploadError('');
 
         if (USE_REAL_BACKEND) {
+            // Verificar estado antes de intentar
             if (!isBackendOnline) {
-                setUploadError('Error: No hay conexión con el servidor (Offline). Ejecuta server.js');
-                setIsUploading(false);
-                return;
+                // Re-verificar por si acaso se conectó hace poco
+                const status = await checkBackendHealth();
+                setIsBackendOnline(status);
+                if (!status) {
+                    setUploadError('Error: No hay conexión con el servidor Backend.');
+                    setIsUploading(false);
+                    return;
+                }
             }
-            /* 
-               --- IMPLEMENTACIÓN REAL CON MONGODB GRIDFS ---
-            */
+
             try {
                 const uploadedFile = await uploadFileToBackend(file, (percent) => {
                     setUploadProgress(prev => ({ ...prev, [prefix]: percent }));
@@ -102,10 +108,9 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                     [`${prefix}base64`]: 'STORED_IN_ATLAS', // Flag para saber que está en backend
                     [`${prefix}tipo`]: file.type
                 }));
-                setUploadError('');
             } catch (error: any) {
-                setUploadError('Error conectando con el servidor. Asegúrate de ejecutar server.js');
-                console.error(error);
+                console.error("Upload Error:", error);
+                setUploadError(`Fallo al subir: ${error.message}`);
             } finally {
                 setIsUploading(false);
                 setUploadProgress(prev => { const n = {...prev}; delete n[prefix]; return n; });
@@ -116,7 +121,7 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
             const DEMO_LIMIT_MB = 5; 
             
             if (file.size > DEMO_LIMIT_MB * 1024 * 1024) {
-                setUploadError(`MODO DEMO: Límite de ${DEMO_LIMIT_MB}MB. Para archivos de 2GB, conecta el Backend (server.js).`);
+                setUploadError(`MODO DEMO: Límite de ${DEMO_LIMIT_MB}MB. Para archivos grandes conecta el Backend.`);
                 setIsUploading(false);
                 return;
             }
@@ -490,10 +495,10 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                                 <span>
                                     {isBackendOnline 
                                         ? "Conectado a Atlas (2GB+)" 
-                                        : "Offline (Demo Local Máx 5MB)"}
+                                        : "Offline (Sin conexión al Servidor)"}
                                 </span>
                             </div>
-                            {USE_REAL_BACKEND && !isBackendOnline && <span className="font-bold">Ejecuta server.js</span>}
+                            {USE_REAL_BACKEND && !isBackendOnline && <span className="font-bold">Revisar Logs</span>}
                         </div>
 
                         <div className="space-y-5">
