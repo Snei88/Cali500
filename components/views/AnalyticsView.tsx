@@ -14,7 +14,7 @@ interface AnalyticsViewProps {
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
     return (
-        <div className="space-y-6 max-w-[1600px] mx-auto fade-in">
+        <div className="space-y-6 max-w-[1600px] mx-auto fade-in pb-10">
             {/* KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <KpiCard title="Total Instrumentos" value={stats.total} icon={<FileText className="h-8 w-8 mx-auto text-slate-300" />} />
@@ -30,7 +30,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                         <BarChart3 className="h-5 w-5" />
                         Distribución por Tipo de Documento
                     </h3>
-                    <div className="w-full h-60">
+                    <div className="w-full h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byType} layout="vertical" margin={{ left: 40, right: 20, top: 10, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
@@ -53,7 +53,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                         <Target className="h-5 w-5" />
                         Distribución por Eje Estratégico
                     </h3>
-                    <div className="w-full h-60">
+                    <div className="w-full h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.byEje} margin={{ top: 20, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -73,45 +73,48 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ stats }) => {
                 </div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col min-h-[360px]">
-                <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
-                    <CheckCircle2 className="h-5 w-5" />
-                    Distribución por Estado
-                </h3>
-                <div className="grid grid-cols-2 grid-rows-2 gap-3 flex-1">
-                    <StatusBox label="Permanente" count={stats.estadosMap['Permanente']} colorCode={CALI.VERDE} bgGradient="linear-gradient(135deg, #f0f9e8, #ffffff)" />
-                    <StatusBox label="En Ejecución" count={stats.estadosMap['En Ejecución']} colorCode={CALI.TURQUESA} bgGradient="linear-gradient(135deg, #e0f7f5, #ffffff)" />
-                    <StatusBox label="En Actualización" count={stats.estadosMap['En Actualización']} colorCode={CALI.AMARILLO} bgGradient="linear-gradient(135deg, #fff9e6, #ffffff)" />
-                    <StatusBox label="Finalizado" count={stats.estadosMap['Finalizado']} colorCode={CALI.ROSA} bgGradient="linear-gradient(135deg, #ffe8f0, #ffffff)" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 {/* Estado Boxes */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                    <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
+                        <CheckCircle2 className="h-5 w-5" />
+                        Distribución por Estado
+                    </h3>
+                    <div className="grid grid-cols-2 grid-rows-2 gap-3 flex-1 min-h-[300px]">
+                        <StatusBox label="Permanente" count={stats.estadosMap['Permanente']} colorCode={CALI.VERDE} bgGradient="linear-gradient(135deg, #f0f9e8, #ffffff)" />
+                        <StatusBox label="En Ejecución" count={stats.estadosMap['En Ejecución']} colorCode={CALI.TURQUESA} bgGradient="linear-gradient(135deg, #e0f7f5, #ffffff)" />
+                        <StatusBox label="En Actualización" count={stats.estadosMap['En Actualización']} colorCode={CALI.AMARILLO} bgGradient="linear-gradient(135deg, #fff9e6, #ffffff)" />
+                        <StatusBox label="Finalizado" count={stats.estadosMap['Finalizado']} colorCode={CALI.ROSA} bgGradient="linear-gradient(135deg, #ffe8f0, #ffffff)" />
+                    </div>
                 </div>
-            </div>
 
-             {/* Pie Chart: Seguimiento */}
-            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col min-h-[360px]">
-                <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
-                    <PieChart className="h-5 w-5" />
-                    Seguimiento
-                </h3>
-                <div className="w-full h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <RePieChart>
-                            <Pie
-                                data={[
-                                    { name: 'Con Seguimiento', value: stats.conSeguimiento },
-                                    { name: 'Sin Seguimiento', value: stats.sinSeguimiento }
-                                ]}
-                                innerRadius={60}
-                                outerRadius={90}
-                                paddingAngle={2}
-                                dataKey="value"
-                            >
-                                <Cell fill={CALI.VERDE} />
-                                <Cell fill={CALI.ROSA} />
-                            </Pie>
-                            <Tooltip />
-                            <Legend verticalAlign="bottom" height={36} />
-                        </RePieChart>
-                    </ResponsiveContainer>
+                 {/* Pie Chart: Seguimiento */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                    <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: CALI.MORADO }}>
+                        <PieChart className="h-5 w-5" />
+                        Seguimiento
+                    </h3>
+                    <div className="w-full h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RePieChart>
+                                <Pie
+                                    data={[
+                                        { name: 'Con Seguimiento', value: stats.conSeguimiento },
+                                        { name: 'Sin Seguimiento', value: stats.sinSeguimiento }
+                                    ]}
+                                    innerRadius={60}
+                                    outerRadius={90}
+                                    paddingAngle={2}
+                                    dataKey="value"
+                                >
+                                    <Cell fill={CALI.VERDE} />
+                                    <Cell fill={CALI.ROSA} />
+                                </Pie>
+                                <Tooltip />
+                                <Legend verticalAlign="bottom" height={36} />
+                            </RePieChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
             </div>
 

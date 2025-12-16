@@ -18,7 +18,6 @@ const API_URL = getBaseUrl();
 export const checkBackendHealth = async (): Promise<boolean> => {
     console.log(`🩺 [API] Verificando salud del sistema en: ${API_URL}/health`);
     
-    // Timeout de 5 segundos para evitar bloqueos
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -38,8 +37,7 @@ export const checkBackendHealth = async (): Promise<boolean> => {
         const data = await response.json();
         console.log("📦 [API] Respuesta del Servidor:", data);
         
-        // LÓGICA CRÍTICA CORREGIDA:
-        // El backend envía 'dbState' (número). 1 = Conectado, 2 = Conectando, 0 = Desconectado.
+        // 1 = Conectado
         if (data.dbState === 1) {
             console.log("✅ [API] Conexión Establecida y DB Lista.");
             return true;
@@ -84,7 +82,7 @@ export const uploadFileToBackend = async (file: File, onProgress: (percent: numb
                 }
             } else {
                 console.error(`❌ [API] Fallo en servidor: ${xhr.responseText}`);
-                reject(new Error(`Error ${xhr.status}: Fallo al guardar archivo`));
+                reject(new Error(`Error ${xhr.status}: Fallo al guardar archivo. Ver logs del servidor.`));
             }
         };
 
