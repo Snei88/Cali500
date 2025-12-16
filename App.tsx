@@ -13,62 +13,67 @@ import { InstrumentDrawer } from './components/InstrumentDrawer';
 import { LoginModal } from './components/auth/LoginModal';
 import { AlertModal } from './components/ui/AlertModal';
 import { ContactModal } from './components/ui/ContactModal';
+import { getInstruments, saveInstrument, deleteInstrument, seedInstruments } from './services/api';
 
 const App = () => {
     // --- STATE ---
-    
-    // Initialize with persisted data if available
-    const [instrumentsData, setInstrumentsData] = useState<Instrumento[]>(() => {
-        const savedData = localStorage.getItem('cali500_instruments');
-        return savedData ? JSON.parse(savedData) : (instrumentos as Instrumento[]);
-    });
+    const [instrumentsData, setInstrumentsData] = useState<Instrumento[]>([]);
+    const [isLoadingData, setIsLoadingData] = useState(true);
 
     const [currentView, setCurrentView] = useState<'analitica' | 'ecosistema' | 'mapa'>('analitica');
     const [selectedInstrument, setSelectedInstrument] = useState<Instrumento | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterEje, setFilterEje] = useState('Todos');
-    
-    // Mobile Sidebar State
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    
-    // Auth States
     const [userRole, setUserRole] = useState<'usuario' | 'administrador'>('usuario');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-    // Alert & Modal States
     const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, type: 'success' | 'error', title: string, message: string}>({
         isOpen: false, type: 'success', title: '', message: ''
     });
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
-    // Save to localStorage whenever data changes
+    // --- INITIAL DATA LOAD (FROM CLOUD) ---
     useEffect(() => {
-        localStorage.setItem('cali500_instruments', JSON.stringify(instrumentsData));
-    }, [instrumentsData]);
-
-    // Check for persisted session (optional, but good UX)
-    useEffect(() => {
+        const initData = async () => {
+            setIsLoadingData(true);
+            try {
+                // 1. Intentar obtener datos de la nube
+                const cloudData = await getInstruments();
+                
+                if (cloudData && cloudData.length > 0) {
+                    console.log("☁️ Datos cargados desde la nube.");
+                    setInstrumentsData(cloudData);
+                } else {
+                    // 2. Si la nube está vacía, usar datos estáticos y sincronizarlos (Seed)
+                    console.log("🌱 Base de datos vacía. Iniciando carga inicial...");
+                    setInstrumentsData(instrumentos as Instrumento[]);
+                    await seedInstruments(instrumentos);
+                }
+            } catch (error) {
+                console.error("Error inicializando datos:", error);
+                // Fallback a datos locales si todo falla
+                setInstrumentsData(instrumentos as Instrumento[]);
+            } finally {
+                setIsLoadingData(false);
+            }
+        };
+        initData();
+        
+        // Check auth session
         const session = sessionStorage.getItem('cali500_auth');
-        if (session === 'true') {
-            setIsAuthenticated(true);
-        }
+        if (session === 'true') setIsAuthenticated(true);
     }, []);
 
-    // --- HELPER: SHOW ALERT ---
     const showAlert = (type: 'success' | 'error', title: string, message: string) => {
         setAlertConfig({ isOpen: true, type, title, message });
     };
 
     // --- AUTH ACTIONS ---
-
     const handleLoginRequest = () => {
-        if (isAuthenticated) {
-            setUserRole('administrador');
-        } else {
-            setIsLoginOpen(true);
-        }
+        if (isAuthenticated) setUserRole('administrador');
+        else setIsLoginOpen(true);
     };
 
     const handleLoginSuccess = (success: boolean) => {
@@ -86,27 +91,33 @@ const App = () => {
         sessionStorage.removeItem('cali500_auth');
     };
 
-    // --- DATA ACTIONS ---
+    // --- DATA ACTIONS (CLOUD SYNCED) ---
 
-    const handleUpdateInstrument = (updated: Instrumento) => {
+    const handleUpdateInstrument = async (updated: Instrumento) => {
+        // Optimistic Update (UI update immediately)
         setInstrumentsData(prevData => prevData.map(item => item.id === updated.id ? updated : item));
+        // Cloud Save
+        await saveInstrument(updated);
     };
 
-    const handleDeleteInstrument = (id: number, e: React.MouseEvent) => {
+    const handleDeleteInstrument = async (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (window.confirm('¿Estás seguro de que deseas eliminar este instrumento? Esta acción no se puede deshacer.')) {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este instrumento?')) {
             setInstrumentsData(prevData => prevData.filter(item => item.id !== id));
+            await deleteInstrument(id);
         }
     };
 
-    const handleCreateInstrument = (newItem: Instrumento) => {
-        // Generate new ID
+    const handleCreateInstrument = async (newItem: Instrumento) => {
         const maxId = instrumentsData.length > 0 ? Math.max(...instrumentsData.map(i => i.id)) : 0;
         const instrumentWithId = { ...newItem, id: maxId + 1 };
+        
         setInstrumentsData([...instrumentsData, instrumentWithId]);
         setIsCreating(false);
         setSelectedInstrument(null);
-        showAlert('success', 'Instrumento Creado', `Se ha agregado "${newItem.nombre}" al ecosistema correctamente.`);
+        showAlert('success', 'Instrumento Creado', `Se ha agregado "${newItem.nombre}" correctamente.`);
+        
+        await saveInstrument(instrumentWithId);
     };
 
     const openCreateModal = () => {
@@ -128,93 +139,57 @@ const App = () => {
         setIsCreating(true);
     };
 
-    const handleResetData = () => {
-        if (window.confirm('¿Estás seguro de restablecer los datos originales? Se perderán tus cambios locales.')) {
-            setInstrumentsData(instrumentos as Instrumento[]);
-            localStorage.removeItem('cali500_instruments');
-            showAlert('success', 'Datos Restaurados', 'Se ha vuelto a la configuración inicial de instrumentos.');
+    const handleResetData = async () => {
+        if (window.confirm('¿Restaurar datos? Esto reiniciará la base de datos con la información por defecto.')) {
+            // En este caso simple, forzamos los datos estáticos localmente y los mandamos a guardar uno a uno o re-semillamos
+            // Para mantenerlo simple y seguro, solo recargamos la página o reseteamos localmente y dejamos que el usuario edite.
+            // Una implementación real requeriría un endpoint "wipe & seed".
+            alert("Contacte al administrador de TI para un reseteo completo de la Base de Datos en la nube.");
         }
     };
 
     // --- EXPORT / IMPORT LOGIC ---
-
     const handleExportExcel = () => {
-        // Verificar si es administrador
         if (userRole !== 'administrador') {
             setIsContactModalOpen(true);
             return;
         }
-
         const ws = XLSX.utils.json_to_sheet(instrumentsData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Instrumentos");
-        const dateStr = new Date().toISOString().split('T')[0];
-        const fileName = `VisionCali500_Instrumentos_${dateStr}.xlsx`;
-        XLSX.writeFile(wb, fileName);
+        XLSX.writeFile(wb, `VisionCali500_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         const reader = new FileReader();
-        
-        reader.onload = (evt) => {
+        reader.onload = async (evt) => {
             const bstr = evt.target?.result;
             if (!bstr) return;
-
             try {
-                // 1. Read the workbook
                 const wb = XLSX.read(bstr, { type: 'binary' });
-                
-                // 2. Get first sheet
-                const wsname = wb.SheetNames[0];
-                const ws = wb.Sheets[wsname];
-                
-                // 3. Convert to JSON with raw parsing first
+                const ws = wb.Sheets[wb.SheetNames[0]];
                 const importedData = XLSX.utils.sheet_to_json(ws) as any[];
-
-                if (!importedData || importedData.length === 0) {
-                    showAlert('error', 'Archivo Vacío', "El archivo parece estar vacío o no tiene el formato correcto.");
+                
+                if (!importedData.length) {
+                    showAlert('error', 'Error', "Archivo vacío.");
                     return;
                 }
 
-                // 4. Merge logic
-                const currentIds = new Set(instrumentsData.map(i => i.id));
+                // Simple import logic: Add new ones
                 let maxId = instrumentsData.length > 0 ? Math.max(...instrumentsData.map(i => i.id)) : 0;
-                
                 const newItems: Instrumento[] = [];
-                let duplicatesCount = 0;
-                let invalidCount = 0;
+                const currentIds = new Set(instrumentsData.map(i => i.id));
 
-                importedData.forEach((row) => {
-                    // Validar campos mínimos (Nombre y Tipo)
-                    if (!row.nombre || !row.tipo) {
-                        invalidCount++;
-                        return;
-                    }
+                for (const row of importedData) {
+                     if (!row.nombre || !row.tipo) continue;
+                     if (row.id && currentIds.has(row.id)) continue;
 
-                    // Si trae ID y ya existe, es duplicado (se ignora según requerimiento)
-                    if (row.id && currentIds.has(row.id)) {
-                        duplicatesCount++;
-                        return;
-                    }
+                     let newId = row.id || ++maxId;
+                     if (typeof newId === 'number' && newId > maxId) maxId = newId;
 
-                    // Determinar el nuevo ID
-                    let newId = row.id;
-                    if (!newId) {
-                        // Si no trae ID (agregado manualmente en excel), asignar uno nuevo
-                        maxId++;
-                        newId = maxId;
-                    } else {
-                        // Si trae ID nuevo, asegurar que no colisione en el futuro
-                        if (typeof newId === 'number' && newId > maxId) {
-                            maxId = newId;
-                        }
-                    }
-
-                    // Construir el objeto limpiando datos (por si vienen del excel como strings raros)
-                    const newItem: Instrumento = {
+                     const newItem: Instrumento = {
                         id: newId,
                         nombre: String(row.nombre).trim(),
                         tipo: row.tipo,
@@ -228,40 +203,28 @@ const App = () => {
                         enlace: row.enlace || '',
                         pdf_informe: row.pdf_informe || ''
                     };
-
                     newItems.push(newItem);
-                    currentIds.add(newId); // Agregar al set local para evitar duplicados dentro del mismo archivo
-                });
-
+                    currentIds.add(newId);
+                    
+                    // Save to cloud individually (simple approach)
+                    await saveInstrument(newItem);
+                }
+                
                 if (newItems.length > 0) {
                     setInstrumentsData(prev => [...prev, ...newItems]);
-                    showAlert('success', 'Importación Exitosa', 
-                        `Se han agregado ${newItems.length} nuevos instrumentos.\n\n` + 
-                        `${duplicatesCount > 0 ? `• ${duplicatesCount} duplicados ignorados\n` : ''}` + 
-                        `${invalidCount > 0 ? `• ${invalidCount} filas inválidas` : ''}`
-                    );
+                    showAlert('success', 'Importación Exitosa', `Se agregaron ${newItems.length} instrumentos y se sincronizaron con la nube.`);
                 } else {
-                    showAlert('error', 'Sin Cambios', 
-                        `No se encontraron nuevos instrumentos para agregar.\n\n` + 
-                        `${duplicatesCount > 0 ? `• ${duplicatesCount} duplicados encontrados\n` : ''}` +
-                        `${invalidCount > 0 ? `• ${invalidCount} filas inválidas` : ''}`
-                    );
+                    showAlert('error', 'Sin Cambios', "No se encontraron registros nuevos válidos.");
                 }
-
             } catch (error) {
-                console.error("Error importando excel:", error);
-                showAlert('error', 'Error de Procesamiento', "Hubo un error al leer el archivo. Asegúrate de que sea un Excel (.xlsx) válido.");
+                showAlert('error', 'Error', "Fallo al leer el archivo Excel.");
             }
         };
-
         reader.readAsBinaryString(file);
-        
-        // Reset input
         e.target.value = '';
     };
 
     // --- DATA PROCESSING ---
-
     const filteredData = useMemo(() => {
         return instrumentsData.filter(item => {
             const matchesSearch = item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -279,19 +242,14 @@ const App = () => {
         const sinSeguimiento = sourceData.filter(i => i.seguimiento !== 'Si').length;
         const cobertura = total > 0 ? ((conSeguimiento / total) * 100).toFixed(1) : '0';
         
-        // Unificar estados para las tarjetas
         const estadosMap: Record<string, number> = {
-            'Permanente': 0,
-            'En Ejecución': 0,
-            'En Actualización': 0,
-            'Finalizado': 0
+            'Permanente': 0, 'En Ejecución': 0, 'En Actualización': 0, 'Finalizado': 0
         };
 
         sourceData.forEach(i => {
             let st: string = i.estado;
-            if (st === 'En proyecto') st = 'En Actualización'; // Simplify for stats
+            if (st === 'En proyecto') st = 'En Actualización';
             if (st === 'Finalizada') st = 'Finalizado';
-            
             if (estadosMap[st] !== undefined) estadosMap[st]++;
         });
 
@@ -302,19 +260,11 @@ const App = () => {
 
         const byEje = AXIS_ORDER.map(eje => ({
             name: eje,
-            shortName: eje.split(' ')[0], // Simpler name for axis
+            shortName: eje.split(' ')[0],
             count: sourceData.filter(i => i.eje === eje).length
         }));
 
-        return {
-            total,
-            conSeguimiento,
-            sinSeguimiento,
-            cobertura,
-            estadosMap,
-            byType,
-            byEje
-        };
+        return { total, conSeguimiento, sinSeguimiento, cobertura, estadosMap, byType, byEje };
     }, [filteredData]);
 
     const groupedData = useMemo(() => {
@@ -329,15 +279,20 @@ const App = () => {
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+    if (isLoadingData) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-slate-50 flex-col gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <p className="text-slate-500 font-medium animate-pulse">Sincronizando con el Ecosistema...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen bg-slate-100 font-sans text-slate-800 overflow-hidden">
-            
             <Sidebar 
                 currentView={currentView} 
-                setCurrentView={(view) => {
-                    setCurrentView(view);
-                    setIsSidebarOpen(false); // Close sidebar on mobile when navigating
-                }} 
+                setCurrentView={(view) => { setCurrentView(view); setIsSidebarOpen(false); }} 
                 instrumentsCount={instrumentsData.length} 
                 userRole={userRole} 
                 handleResetData={handleResetData}
@@ -346,10 +301,7 @@ const App = () => {
                 isOpen={isSidebarOpen}
                 closeSidebar={() => setIsSidebarOpen(false)}
             />
-
-            {/* --- MAIN CONTENT --- */}
             <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden bg-slate-50/50">
-                
                 <Header 
                     currentView={currentView}
                     searchTerm={searchTerm}
@@ -361,15 +313,8 @@ const App = () => {
                     userRole={userRole}
                     toggleSidebar={toggleSidebar}
                 />
-
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth relative custom-scrollbar">
-                    
-                    {/* View: Analítica */}
-                    {currentView === 'analitica' && (
-                        <AnalyticsView stats={stats} />
-                    )}
-
-                    {/* View: Ecosistema (Cards) */}
+                    {currentView === 'analitica' && <AnalyticsView stats={stats} />}
                     {currentView === 'ecosistema' && (
                         <EcosystemView 
                             groupedData={groupedData} 
@@ -381,35 +326,17 @@ const App = () => {
                             onAdminRequest={handleLoginRequest}
                         />
                     )}
-
-                    {/* View: Mapa Circular */}
-                    {currentView === 'mapa' && (
-                         <CircularMap instruments={filteredData} onSelect={setSelectedInstrument} />
-                    )}
-
+                    {currentView === 'mapa' && <CircularMap instruments={filteredData} onSelect={setSelectedInstrument} />}
                 </div>
-                
-                {/* Details Drawer */}
                 <InstrumentDrawer 
                     instrument={selectedInstrument} 
-                    onClose={() => {
-                        setSelectedInstrument(null);
-                        setIsCreating(false);
-                    }} 
+                    onClose={() => { setSelectedInstrument(null); setIsCreating(false); }} 
                     role={userRole}
                     onUpdate={handleUpdateInstrument}
                     onCreate={handleCreateInstrument}
                     isCreating={isCreating}
                 />
-
-                {/* Login Modal */}
-                <LoginModal 
-                    isOpen={isLoginOpen} 
-                    onClose={() => setIsLoginOpen(false)} 
-                    onLogin={handleLoginSuccess} 
-                />
-
-                {/* Alert Modal */}
+                <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onLogin={handleLoginSuccess} />
                 <AlertModal 
                     isOpen={alertConfig.isOpen}
                     type={alertConfig.type}
@@ -417,13 +344,7 @@ const App = () => {
                     message={alertConfig.message}
                     onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
                 />
-
-                {/* Contact Modal (Restricted Download) */}
-                <ContactModal 
-                    isOpen={isContactModalOpen}
-                    onClose={() => setIsContactModalOpen(false)}
-                />
-
+                <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
             </main>
         </div>
     );

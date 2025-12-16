@@ -1,93 +1,106 @@
 
 // Configuración de la API Profesional
-// Detecta automáticamente el entorno (Local vs Nube)
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-// Lógica de Selección de URL:
-// 1. Si es Local -> Usa http://localhost:8080/api
-// 2. Si es Producción -> Usa tu URL de Render confirmada
+// URL Dinámica
 let API_URL = isLocal 
     ? 'http://localhost:8080/api' 
     : 'https://vision-cali-backend.onrender.com/api';
 
-// Limpieza de URL
-if (API_URL.endsWith('/')) {
-    API_URL = API_URL.slice(0, -1);
-}
+if (API_URL.endsWith('/')) API_URL = API_URL.slice(0, -1);
 
-// Logs de Diagnóstico
-console.groupCollapsed("🚀 [SISTEMA] Configuración de Conexión");
-console.log(`Modo: ${isLocal ? 'DESARROLLO (Local)' : 'PRODUCCIÓN (Nube)'}`);
-console.log(`Backend URL: ${API_URL}`);
-console.groupEnd();
+console.log(`🚀 [API] Conectando a: ${API_URL}`);
 
+// --- HEALTH CHECK ---
 export const checkBackendHealth = async (): Promise<boolean> => {
     if (!API_URL) return false;
     try {
         const controller = new AbortController();
-        // Render (nivel gratuito) se duerme si no se usa. Damos más tiempo (15s) para que "despierte".
         const timeoutId = setTimeout(() => controller.abort(), isLocal ? 2000 : 15000);
-
-        const response = await fetch(`${API_URL}/health`, { 
-            signal: controller.signal,
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
+        const response = await fetch(`${API_URL}/health`, { signal: controller.signal });
         clearTimeout(timeoutId);
-
         if (!response.ok) return false;
-        
         const data = await response.json();
-        return data.dbState === 1; // 1 significa 'Conectado' en Mongoose
-
+        return data.dbState === 1;
     } catch (error) {
-        if (isLocal) console.warn("⚠️ [API] Backend no disponible:", error);
         return false;
     }
 };
 
+// --- DATA SYNC FUNCTIONS ---
+
+export const getInstruments = async () => {
+    try {
+        const res = await fetch(`${API_URL}/instruments`);
+        if (!res.ok) return [];
+        return await res.json();
+    } catch (e) {
+        console.warn("⚠️ Error fetching instruments:", e);
+        return [];
+    }
+};
+
+export const saveInstrument = async (instrument: any) => {
+    try {
+        await fetch(`${API_URL}/instruments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(instrument)
+        });
+    } catch (e) {
+        console.error("Error saving instrument:", e);
+    }
+};
+
+export const deleteInstrument = async (id: number) => {
+    try {
+        await fetch(`${API_URL}/instruments/${id}`, { method: 'DELETE' });
+    } catch (e) {
+        console.error("Error deleting instrument:", e);
+    }
+};
+
+export const seedInstruments = async (data: any[]) => {
+    try {
+        await fetch(`${API_URL}/instruments/seed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    } catch (e) {
+        console.error("Error seeding DB:", e);
+    }
+};
+
+// --- FILE FUNCTIONS ---
+
 export const uploadFileToBackend = async (file: File, onProgress: (percent: number) => void): Promise<any> => {
-    if (!API_URL) throw new Error("URL de Backend no configurada");
-
     return new Promise((resolve, reject) => {
-        const uploadUrl = `${API_URL}/upload`;
-
         const xhr = new XMLHttpRequest();
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        xhr.open('POST', uploadUrl, true);
+        xhr.open('POST', `${API_URL}/upload`, true);
         
         xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
-                onProgress(Math.round(percentComplete));
-            }
+            if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
         };
 
         xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
-                    const response = JSON.parse(xhr.responseText);
-                    resolve(response.file || response);
-                } catch (e) {
-                    reject(new Error('Respuesta inválida del servidor'));
-                }
+                    resolve(JSON.parse(xhr.responseText));
+                } catch (e) { reject(new Error('Invalid JSON response')); }
             } else {
-                reject(new Error(`Error ${xhr.status}: ${xhr.statusText}`));
+                reject(new Error(`Error ${xhr.status}`));
             }
         };
-
-        xhr.onerror = () => {
-            reject(new Error('Fallo de red al intentar subir el archivo.'));
-        };
+        xhr.onerror = () => reject(new Error('Network Error'));
         
+        const formData = new FormData();
+        formData.append('file', file);
         xhr.send(formData);
     });
 };
 
 export const getFileDownloadUrl = (filename: string) => {
-    if (!API_URL) return '#';
     return `${API_URL}/files/${filename}`;
 };
