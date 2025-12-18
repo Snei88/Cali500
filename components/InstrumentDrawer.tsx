@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, CheckCircle2, ExternalLink, FileText, UploadCloud, Download, Trash2, AlertCircle, FileBarChart, Scale, FolderOpen, CalendarRange, Target, Eye, FileSpreadsheet, File, Loader2, Wifi, WifiOff } from 'lucide-react';
+import { X, Save, CheckCircle2, ExternalLink, FileText, UploadCloud, Download, Trash2, AlertCircle, FileBarChart, Scale, FolderOpen, CalendarRange, Target, Eye, FileSpreadsheet, File, Loader2, Wifi, WifiOff, Globe } from 'lucide-react';
 import { Instrumento } from '@/types';
 import { CALI, AXIS_ORDER, STATUS_COLORS } from '@/utils/constants';
 import { uploadFileToBackend, getFileDownloadUrl, checkBackendHealth } from '@/services/api'; 
@@ -69,12 +68,6 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
         onClose();
     }
     
-    const formatFileSize = (base64String: string | undefined) => {
-        if (!base64String) return '0 KB';
-        if (base64String === 'STORED_IN_ATLAS' || USE_REAL_BACKEND) return 'Nube'; 
-        return 'Local';
-    };
-
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, prefix: string) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -120,7 +113,6 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
             }
 
         } else {
-            // ... fallback logic (omitted for brevity)
              setIsUploading(false);
         }
         
@@ -279,8 +271,6 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 custom-scrollbar">
                     
-                    {/* General Info & Monitoring Sections (Omitted for brevity, kept same as original logic) */}
-                    {/* ... (Las secciones de Información General y Seguimiento se mantienen igual visualmente) ... */}
                     <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
                         <div className="absolute top-4 left-0 w-1 h-8 bg-indigo-500 rounded-r"></div>
                         <h3 className="text-sm font-bold text-slate-800 mb-4 pl-2">Información General</h3>
@@ -319,6 +309,39 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
                                     ) : <div className="p-2 bg-slate-50 rounded-lg text-xs font-medium text-slate-700">{editData.eje}</div>}
                                 </div>
                             </div>
+
+                            {/* --- BOTÓN DE ENLACE OFICIAL / OBSERVATORIO (REINTEGRADO) --- */}
+                            <div className="pt-2 border-t border-slate-100 mt-2 pt-4">
+                                <span className="text-[10px] text-slate-400 font-bold uppercase block mb-2 flex items-center gap-1.5">
+                                    <Globe className="h-3 w-3" /> Enlace Oficial / Observatorio
+                                </span>
+                                {isAdmin || isCreating ? (
+                                    <input 
+                                        type="url" 
+                                        value={editData.enlace || ''} 
+                                        onChange={(e) => handleInputChange('enlace', e.target.value)}
+                                        placeholder="https://ejemplo.com/observatorio"
+                                        className="w-full text-xs p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-indigo-400 transition-colors shadow-sm"
+                                    />
+                                ) : (
+                                    editData.enlace ? (
+                                        <a 
+                                            href={editData.enlace} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center gap-2.5 w-full py-3 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-xl text-xs font-bold hover:bg-cyan-100 transition-all shadow-sm group"
+                                        >
+                                            <ExternalLink className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                            Ver Enlace del Instrumento
+                                        </a>
+                                    ) : (
+                                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[10px] text-slate-400 text-center font-medium italic">
+                                            Sin enlace oficial registrado
+                                        </div>
+                                    )
+                                )}
+                            </div>
+
                         </div>
                     </section>
 
