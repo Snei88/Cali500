@@ -23,7 +23,7 @@ const App = () => {
     const [instrumentsData, setInstrumentsData] = useState<Instrumento[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    const [activeSection, setActiveSection] = useState<'home' | 'about' | 'dashboard'>('home');
+    const [activeSection, setActiveSection] = useState<'home' | 'dashboard'>('home');
     const [currentView, setCurrentView] = useState<'analitica' | 'ecosistema' | 'mapa'>('analitica');
     
     const [selectedInstrument, setSelectedInstrument] = useState<Instrumento | null>(null);
@@ -46,10 +46,8 @@ const App = () => {
             try {
                 const cloudData = await getInstruments();
                 if (cloudData && cloudData.length > 0) {
-                    console.log("📦 Datos cargados desde la nube:", cloudData.length);
                     setInstrumentsData(cloudData);
                 } else {
-                    console.log("🌱 Base de datos vacía, usando datos locales...");
                     setInstrumentsData(instrumentos as Instrumento[]);
                     await seedInstruments(instrumentos);
                 }
@@ -69,68 +67,35 @@ const App = () => {
         setAlertConfig({ isOpen: true, type, title, message });
     };
 
-    // --- AUTH ACTIONS ---
-    const handleLoginRequest = () => {
-        if (isAuthenticated) setUserRole('administrador');
-        else setIsLoginOpen(true);
-    };
-
-    const handleLoginSuccess = (success: boolean) => {
-        if (success) {
-            setIsAuthenticated(true);
-            setUserRole('administrador');
-            setIsLoginOpen(false);
-            sessionStorage.setItem('cali500_auth', 'true');
-        }
-    };
-
-    const handleLogout = () => {
-        setIsAuthenticated(false);
-        setUserRole('usuario');
-        sessionStorage.removeItem('cali500_auth');
+    // --- NAV ACTIONS ---
+    const handleGoToDashboard = (view: 'analitica' | 'ecosistema' | 'mapa') => {
+        setActiveSection('dashboard');
+        setCurrentView(view);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     // --- DATA ACTIONS ---
     const handleUpdateInstrument = async (updated: Instrumento) => {
-        console.log("🔄 Actualizando instrumento ID:", updated.id);
-        
-        // Actualización optimista
         setInstrumentsData(prevData => prevData.map(item => item.id === updated.id ? updated : item));
-        
         const success = await saveInstrument(updated);
-        if (success) {
-            showAlert('success', 'Cambios Guardados', `El instrumento "${updated.nombre}" se actualizó en la nube.`);
-        } else {
-            showAlert('error', 'Error al Guardar', 'No se pudo persistir el cambio en el servidor. Revise su conexión.');
-            // En un caso real, aquí revertiríamos el estado local si fuera necesario
-        }
+        if (success) showAlert('success', 'Cambios Guardados', `El instrumento "${updated.nombre}" se actualizó.`);
     };
 
     const handleDeleteInstrument = async (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
         if (window.confirm('¿Estás seguro de que deseas eliminar este instrumento?')) {
             setInstrumentsData(prevData => prevData.filter(item => item.id !== id));
-            const success = await deleteInstrument(id);
-            if (!success) {
-                showAlert('error', 'Error', 'No se pudo eliminar el instrumento del servidor.');
-            }
+            await deleteInstrument(id);
         }
     };
 
     const handleCreateInstrument = async (newItem: Instrumento) => {
         const maxId = instrumentsData.length > 0 ? Math.max(...instrumentsData.map(i => i.id)) : 0;
         const instrumentWithId = { ...newItem, id: maxId + 1 };
-        
         setInstrumentsData([...instrumentsData, instrumentWithId]);
         setIsCreating(false);
         setSelectedInstrument(null);
-        
-        const success = await saveInstrument(instrumentWithId);
-        if (success) {
-            showAlert('success', 'Instrumento Creado', `Se ha agregado "${newItem.nombre}" correctamente.`);
-        } else {
-            showAlert('error', 'Error', 'El instrumento se creó localmente pero no se pudo sincronizar.');
-        }
+        await saveInstrument(instrumentWithId);
     };
 
     const openCreateModal = () => {
@@ -141,12 +106,6 @@ const App = () => {
         };
         setSelectedInstrument(emptyInstrument);
         setIsCreating(true);
-    };
-
-    const handleResetData = async () => {
-        if (window.confirm('¿Restaurar datos? Esto reiniciará la base de datos con la información por defecto.')) {
-            alert("Acción reservada para administrador del sistema.");
-        }
     };
 
     // --- EXPORT / IMPORT ---
@@ -178,26 +137,22 @@ const App = () => {
                     if (!row.nombre || !row.tipo) continue;
                     let newId = row.id || ++maxId;
                     const newItem: Instrumento = {
-                        id: newId, nombre: String(row.nombre).trim(), tipo: row.tipo,
-                        eje: row.eje || 'Transversal', inicio: Number(row.inicio) || new Date().getFullYear(),
+                        id: newId, nombre: String(row.nombre).trim(), tipo: row.tipo as any,
+                        eje: row.eje as any || 'Transversal', inicio: Number(row.inicio) || new Date().getFullYear(),
                         fin: row.fin === 'Permanente' ? 'Permanente' : (Number(row.fin) || new Date().getFullYear() + 4),
-                        temporalidad: row.temporalidad || '', estado: row.estado || 'En proyecto',
+                        temporalidad: row.temporalidad || '', estado: row.estado as any || 'En proyecto',
                         seguimiento: row.seguimiento === 'Si' ? 'Si' : 'No', observatorio: row.observatorio || '',
                         enlace: row.enlace || '', pdf_informe: row.pdf_informe || ''
                     };
                     newItems.push(newItem);
                     await saveInstrument(newItem);
                 }
-                if (newItems.length > 0) {
-                    setInstrumentsData(prev => [...prev, ...newItems]);
-                    showAlert('success', 'Importación Exitosa', `Se agregaron ${newItems.length} instrumentos.`);
-                }
+                if (newItems.length > 0) setInstrumentsData(prev => [...prev, ...newItems]);
             } catch (error) {
                 showAlert('error', 'Error', "Fallo al leer el archivo Excel.");
             }
         };
         reader.readAsBinaryString(file);
-        e.target.value = '';
     };
 
     // --- DATA PROCESSING ---
@@ -241,108 +196,94 @@ const App = () => {
         return groups;
     }, [filteredData]);
 
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-    const handleGoToDashboard = (view: 'analitica' | 'ecosistema' | 'mapa') => {
-        setActiveSection('dashboard');
-        setCurrentView(view);
-    };
-
     if (isLoadingData) {
         return (
             <div className="flex h-screen items-center justify-center bg-slate-50 flex-col gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                <p className="text-slate-500 font-medium animate-pulse">Sincronizando con el Ecosistema...</p>
-            </div>
-        );
-    }
-
-    // --- RENDER LOGIC ---
-    if (activeSection === 'home') {
-        return (
-            <div className="flex flex-col min-h-screen">
-                <Navbar 
-                    activeSection={activeSection} 
-                    setActiveSection={setActiveSection} 
-                    onDashboardAction={handleGoToDashboard} 
-                />
-                <main className="flex-1">
-                    <HomeView stats={stats} onAction={handleGoToDashboard} />
-                </main>
-                <Footer />
-                <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onLogin={handleLoginSuccess} />
-                <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
+                <p className="text-slate-500 font-medium animate-pulse">Sincronizando Visión Cali 500+...</p>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-slate-100 font-sans text-slate-800 overflow-hidden">
-            <Sidebar 
-                currentView={currentView} 
-                setCurrentView={(view) => { setCurrentView(view); setIsSidebarOpen(false); }} 
-                instrumentsCount={instrumentsData.length} 
-                userRole={userRole} 
-                handleResetData={handleResetData}
-                isAuthenticated={isAuthenticated}
-                handleLogout={handleLogout}
-                isOpen={isSidebarOpen}
-                closeSidebar={() => setIsSidebarOpen(false)}
-            />
-            <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden bg-slate-50/50">
-                <Header 
-                    currentView={currentView}
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    filterEje={filterEje}
-                    setFilterEje={setFilterEje}
-                    onExport={handleExportExcel}
-                    onImport={handleImportExcel}
-                    userRole={userRole}
-                    toggleSidebar={toggleSidebar}
+        <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-800">
+            {/* NAVBAR GLOBAL PERSISTENTE */}
+            <div className="sticky top-0 z-[60]">
+                <Navbar 
+                    activeSection={activeSection === 'home' ? 'home' : 'dashboard'} 
+                    setActiveSection={(s) => setActiveSection(s as any)} 
+                    onDashboardAction={handleGoToDashboard} 
                 />
-                
-                <button 
-                    onClick={() => setActiveSection('home')}
-                    className="absolute bottom-6 left-6 z-20 md:hidden bg-slate-900 text-white p-3 rounded-full shadow-xl"
-                >
-                    Inicio
-                </button>
+            </div>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth relative custom-scrollbar">
-                    {currentView === 'analitica' && <AnalyticsView stats={stats} />}
-                    {currentView === 'ecosistema' && (
-                        <EcosystemView 
-                            groupedData={groupedData} 
-                            userRole={userRole} 
-                            openCreateModal={openCreateModal} 
-                            setUserRole={setUserRole} 
-                            setSelectedInstrument={setSelectedInstrument} 
-                            handleDeleteInstrument={handleDeleteInstrument}
-                            onAdminRequest={handleLoginRequest}
+            {activeSection === 'home' ? (
+                <>
+                    <main className="flex-1">
+                        <HomeView stats={stats} onAction={handleGoToDashboard} />
+                    </main>
+                    <Footer />
+                </>
+            ) : (
+                <div className="flex flex-1 overflow-hidden h-[calc(100vh-73px)]">
+                    <Sidebar 
+                        currentView={currentView} 
+                        setCurrentView={(view) => { setCurrentView(view); setIsSidebarOpen(false); }} 
+                        instrumentsCount={instrumentsData.length} 
+                        userRole={userRole} 
+                        handleResetData={() => {}}
+                        isAuthenticated={isAuthenticated}
+                        handleLogout={() => { setIsAuthenticated(false); setUserRole('usuario'); }}
+                        isOpen={isSidebarOpen}
+                        closeSidebar={() => setIsSidebarOpen(false)}
+                    />
+                    <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+                        <Header 
+                            currentView={currentView}
+                            searchTerm={searchTerm}
+                            setSearchTerm={setSearchTerm}
+                            filterEje={filterEje}
+                            setFilterEje={setFilterEje}
+                            onExport={handleExportExcel}
+                            onImport={handleImportExcel}
+                            userRole={userRole}
+                            toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
-                    )}
-                    {currentView === 'mapa' && <CircularMap instruments={filteredData} onSelect={setSelectedInstrument} />}
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth custom-scrollbar bg-slate-50/50">
+                            {currentView === 'analitica' && <AnalyticsView stats={stats} />}
+                            {currentView === 'ecosistema' && (
+                                <EcosystemView 
+                                    groupedData={groupedData} 
+                                    userRole={userRole} 
+                                    openCreateModal={openCreateModal} 
+                                    setUserRole={setUserRole} 
+                                    setSelectedInstrument={setSelectedInstrument} 
+                                    handleDeleteInstrument={handleDeleteInstrument}
+                                    onAdminRequest={() => setIsLoginOpen(true)}
+                                />
+                            )}
+                            {currentView === 'mapa' && <CircularMap instruments={filteredData} onSelect={setSelectedInstrument} />}
+                        </div>
+                    </div>
                 </div>
-                
-                <InstrumentDrawer 
-                    instrument={selectedInstrument} 
-                    onClose={() => { setSelectedInstrument(null); setIsCreating(false); }} 
-                    role={userRole}
-                    onUpdate={handleUpdateInstrument}
-                    onCreate={handleCreateInstrument}
-                    isCreating={isCreating}
-                />
-                <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onLogin={handleLoginSuccess} />
-                <AlertModal 
-                    isOpen={alertConfig.isOpen}
-                    type={alertConfig.type}
-                    title={alertConfig.title}
-                    message={alertConfig.message}
-                    onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
-                />
-                <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
-            </main>
+            )}
+            
+            <InstrumentDrawer 
+                instrument={selectedInstrument} 
+                onClose={() => { setSelectedInstrument(null); setIsCreating(false); }} 
+                role={userRole}
+                onUpdate={handleUpdateInstrument}
+                onCreate={handleCreateInstrument}
+                isCreating={isCreating}
+            />
+            <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onLogin={(s) => { if(s){ setIsAuthenticated(true); setUserRole('administrador'); setIsLoginOpen(false); }}} />
+            <AlertModal 
+                isOpen={alertConfig.isOpen}
+                type={alertConfig.type}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+            />
+            <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
         </div>
     );
 };
