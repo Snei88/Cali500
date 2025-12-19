@@ -17,13 +17,15 @@ export const checkBackendHealth = async (): Promise<boolean> => {
     if (!API_URL) return false;
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), isLocal ? 2000 : 15000);
+        const timeoutId = setTimeout(() => controller.abort(), isLocal ? 3000 : 15000);
         const response = await fetch(`${API_URL}/health`, { signal: controller.signal });
         clearTimeout(timeoutId);
         if (!response.ok) return false;
         const data = await response.json();
-        return data.dbState === 1;
+        // Mongoose readyState 1 significa conectado
+        return data.db === 1 || data.dbState === 1;
     } catch (error) {
+        console.warn("⚠️ Backend inalcanzable:", error.message);
         return false;
     }
 };
@@ -41,35 +43,45 @@ export const getInstruments = async () => {
     }
 };
 
-export const saveInstrument = async (instrument: any) => {
+export const saveInstrument = async (instrument: any): Promise<boolean> => {
     try {
-        await fetch(`${API_URL}/instruments`, {
+        const res = await fetch(`${API_URL}/instruments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(instrument)
         });
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(errorText || 'Error en el servidor');
+        }
+        return true;
     } catch (e) {
-        console.error("Error saving instrument:", e);
+        console.error("❌ Error saving instrument:", e.message);
+        return false;
     }
 };
 
-export const deleteInstrument = async (id: number) => {
+export const deleteInstrument = async (id: number): Promise<boolean> => {
     try {
-        await fetch(`${API_URL}/instruments/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_URL}/instruments/${id}`, { method: 'DELETE' });
+        return res.ok;
     } catch (e) {
         console.error("Error deleting instrument:", e);
+        return false;
     }
 };
 
-export const seedInstruments = async (data: any[]) => {
+export const seedInstruments = async (data: any[]): Promise<boolean> => {
     try {
-        await fetch(`${API_URL}/instruments/seed`, {
+        const res = await fetch(`${API_URL}/instruments/seed`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        return res.ok;
     } catch (e) {
         console.error("Error seeding DB:", e);
+        return false;
     }
 };
 
@@ -88,12 +100,12 @@ export const uploadFileToBackend = async (file: File, onProgress: (percent: numb
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
                     resolve(JSON.parse(xhr.responseText));
-                } catch (e) { reject(new Error('Invalid JSON response')); }
+                } catch (e) { reject(new Error('Respuesta JSON inválida')); }
             } else {
-                reject(new Error(`Error ${xhr.status}`));
+                reject(new Error(`Error servidor: ${xhr.status} ${xhr.statusText}`));
             }
         };
-        xhr.onerror = () => reject(new Error('Network Error'));
+        xhr.onerror = () => reject(new Error('Error de red al subir archivo'));
         
         const formData = new FormData();
         formData.append('file', file);

@@ -1,28 +1,34 @@
+
 {
-  "name": "vision-cali500-dashboard",
-  "private": true,
-  "version": "0.0.0",
+  "name": "vision-cali-500",
+  "version": "1.0.0",
+  "description": "Dashboard Estratégico Visión Cali 500+",
   "type": "module",
-  "homepage": "https://snei88.github.io/Cali500/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "server": "node server.js",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
-    "lucide-react": "^0.555.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "recharts": "^3.5.0",
-    "xlsx": "latest"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "^0.450.0",
+    "recharts": "^2.12.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "gh-pages": "^6.3.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.2.0",
+    "gh-pages": "^6.1.1"
   }
 }
