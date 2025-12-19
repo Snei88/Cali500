@@ -63,7 +63,7 @@ const NEWS = [
         date: "17 Sep 2024",
         summary: "La iniciativa Cali500+ logró adhesión de gremios empresariales, sectores productivos y academia, destacando la cooperación intersectorial.",
         link: "https://www.semana.com",
-        logo: "assets/semana.png"
+        logo: "/assets/semana.png"
     },
     {
         source: "Cali Stereo Online",
@@ -71,7 +71,7 @@ const NEWS = [
         date: "22 Abr 2025",
         summary: "El urbanista internacional Young-Hoon Kwaak visitó la ciudad para apoyar la visión sostenible del Plan Cali 500+.",
         link: "https://calistereofm.com",
-        logo: "assets/cali_stereo_online.png"
+        logo: "/assets/cali_stereo_online.png"
     },
     {
         source: "El País",
@@ -79,7 +79,7 @@ const NEWS = [
         date: "24 Jul 2025",
         summary: "La Administración Distrital rindió cuentas de los avances del plan Cali 500+, con participación de gremios, universidades y sociedad civil.",
         link: "https://www.elpais.com.co",
-        logo: "assets/el_pais.png"
+        logo: "/assets/el_pais.png"
     },
     {
         source: "El País",
@@ -87,7 +87,7 @@ const NEWS = [
         date: "31 Jul 2025",
         summary: "Presentación pública de la visión Cali 500+, destacando la participación de diversos sectores para construir un futuro equitativo.",
         link: "https://www.elpais.com.co",
-        logo: "assets/el_pais.png"
+        logo: "/assets/el_pais.png"
     },
     {
         source: "Diario del Cauca",
@@ -95,7 +95,7 @@ const NEWS = [
         date: "01 Ago 2025",
         summary: "El plan fue socializado con medios de comunicación, resaltando el diálogo y el trabajo conjunto para impulsar la hoja de ruta.",
         link: "https://diariodelcauca.com.co",
-        logo: "assets/diario.png"
+        logo: "/assets/diario.png"
     }
 ];
 
