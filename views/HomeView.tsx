@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
     ChevronRight, ChevronLeft, CheckCircle2, Newspaper, ArrowRight, 
     Twitter, Target, Users, Activity, Mail, MessageCircle, FileText, Globe, Info, 
-    Send, User, AtSign, Smartphone, Check
+    Send, User, AtSign, Smartphone, Check, Zap, Eye, BarChart3, ExternalLink
 } from 'lucide-react';
 import { Stats } from '@/types';
 import { CALI } from '@/utils/constants';
@@ -58,28 +58,44 @@ const HERO_SLIDES = [
 
 const NEWS = [
     {
-        source: "El País Cali",
-        title: "Cali 500+: El ambicioso plan para transformar la capital del Valle",
-        date: "15 Mar 2024",
-        type: "Prensa",
-        icon: Newspaper,
-        link: "https://www.elpais.com.co"
+        source: "Semana",
+        title: "Más de 50 sectores productivos se sumaron a la iniciativa Cali500+",
+        date: "17 Sep 2024",
+        summary: "La iniciativa Cali500+ logró adhesión de gremios empresariales, sectores productivos y academia, destacando la cooperación intersectorial.",
+        link: "https://www.semana.com",
+        logo: "assets/semana.png"
     },
     {
-        source: "Alcaldía de Cali",
-        title: "Se firma convenio internacional para el Ecosistema Digital Cali 500",
-        date: "10 Mar 2024",
-        type: "Oficial",
-        icon: CheckCircle2,
-        link: "https://www.cali.gov.co"
+        source: "Cali Stereo Online",
+        title: "Cali avanza hacia la sostenibilidad con la implementación del Plan Cali 500+",
+        date: "22 Abr 2025",
+        summary: "El urbanista internacional Young-Hoon Kwaak visitó la ciudad para apoyar la visión sostenible del Plan Cali 500+.",
+        link: "https://calistereofm.com",
+        logo: "assets/cali_stereo_online.png"
     },
     {
-        source: "Twitter / X",
-        title: "#Cali500: Ciudadanos participan en el primer foro de visión urbana",
-        date: "05 Mar 2024",
-        type: "Redes",
-        icon: Twitter,
-        link: "https://twitter.com/alcaldiadecali"
+        source: "El País",
+        title: "Alcaldía presentó los avances del plan Cali 500+",
+        date: "24 Jul 2025",
+        summary: "La Administración Distrital rindió cuentas de los avances del plan Cali 500+, con participación de gremios, universidades y sociedad civil.",
+        link: "https://www.elpais.com.co",
+        logo: "assets/el_pais.png"
+    },
+    {
+        source: "El País",
+        title: "Cali 500+: una visión compartida para proyectar la ciudad hacia sus 500 años",
+        date: "31 Jul 2025",
+        summary: "Presentación pública de la visión Cali 500+, destacando la participación de diversos sectores para construir un futuro equitativo.",
+        link: "https://www.elpais.com.co",
+        logo: "assets/el_pais.png"
+    },
+    {
+        source: "Diario del Cauca",
+        title: "Visión Cali 500+ fue presentada a los periodistas de la ciudad",
+        date: "01 Ago 2025",
+        summary: "El plan fue socializado con medios de comunicación, resaltando el diálogo y el trabajo conjunto para impulsar la hoja de ruta.",
+        link: "https://diariodelcauca.com.co",
+        logo: "assets/diario.png"
     }
 ];
 
@@ -103,7 +119,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSending(true);
-        // Simular envío
         setTimeout(() => {
             setIsSending(false);
             setFormSent(true);
@@ -111,10 +126,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
         }, 1500);
     };
 
+    const nextNews = () => setNewsIndex((prev) => (prev + 1) % NEWS.length);
+    const prevNews = () => setNewsIndex((prev) => (prev - 1 + NEWS.length) % NEWS.length);
+
     return (
         <div className="bg-white overflow-x-hidden font-['Plus_Jakarta_Sans']">
             
-            {/* 1. CARRUSEL - COMPACT HEIGHT & MINIMALIST NAV */}
+            {/* 1. CARRUSEL */}
             <section className="relative h-[300px] md:h-[400px] bg-[#0F172A] overflow-hidden group">
                 <div 
                     ref={slideContainerRef}
@@ -164,7 +182,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                     ))}
                 </div>
 
-                {/* Minimalist Round Nav Buttons */}
                 <button 
                     onClick={prevSlide}
                     className="absolute left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/20 hover:bg-indigo-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all opacity-0 group-hover:opacity-100 active:scale-90"
@@ -189,7 +206,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                 </div>
             </section>
 
-            {/* 2. ESTADO DE AVANCE (KPI STATS) */}
+            {/* 2. ESTADO DE AVANCE */}
             <section className="py-20 bg-slate-50 border-b border-slate-100">
                 <div className="container mx-auto px-6 max-w-6xl">
                     <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 text-center md:text-left">
@@ -222,92 +239,140 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                 </div>
             </section>
 
-            {/* 3. QUIÉNES SOMOS (MISIÓN Y VISIÓN) */}
-            <section id="quienes-somos" className="py-20 bg-[#0F172A] text-white relative scroll-mt-20">
+            {/* 3. QUIÉNES SOMOS (VISIÓN CALI 500+) */}
+            <section id="quienes-somos" className="py-24 bg-[#0F172A] text-white relative scroll-mt-20 overflow-hidden">
+                <div className="absolute top-0 right-0 w-1/3 h-full bg-indigo-500/5 blur-[120px] pointer-events-none"></div>
                 <div className="container mx-auto px-6 max-w-6xl relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        <div>
-                            <span className="text-cyan-400 text-[10px] font-black uppercase tracking-[0.5em] mb-4 block">Nuestra Visión y Misión</span>
-                            <h2 className="text-3xl md:text-4xl font-extrabold leading-tight mb-6 tracking-tighter">Planificando <br/><span className="text-slate-500 font-light italic">la Cali del Mañana</span></h2>
-                            <p className="text-slate-400 text-base leading-relaxed mb-10 max-w-md font-medium">
-                                Cali 500+ es el marco estratégico diseñado para asegurar que Santiago de Cali alcance su quinto centenario como referente de sostenibilidad, equidad social y desarrollo intercultural.
-                            </p>
-                            <div className="grid grid-cols-1 gap-6">
-                                <div className="flex gap-5 group">
-                                    <div className="w-12 h-12 shrink-0 rounded-xl border border-cyan-500/20 flex items-center justify-center text-cyan-400 font-black text-lg group-hover:bg-cyan-500 group-hover:text-white transition-all shadow-lg">01</div>
-                                    <div>
-                                        <h4 className="font-black text-[10px] uppercase tracking-[0.3em] mb-1 text-white">Coordinación</h4>
-                                        <p className="text-xs text-slate-500 leading-relaxed">Articulamos la planeación técnica con las necesidades reales del territorio.</p>
+                        <div className="space-y-10">
+                            <div>
+                                <span className="text-cyan-400 text-[10px] font-black uppercase tracking-[0.5em] mb-4 block">Nuestra Misión y Visión</span>
+                                <h2 className="text-4xl md:text-5xl font-black leading-[1.1] mb-6 tracking-tighter uppercase">
+                                    Planeando <br/><span className="text-slate-500 font-light italic lowercase">el futuro de Cali</span>
+                                </h2>
+                                <p className="text-slate-400 text-base leading-relaxed max-w-md font-medium">
+                                    Cali 500+ es el marco estratégico que orienta el desarrollo integral de Santiago de Cali hacia su quinto centenario.
+                                </p>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div className="flex gap-6 group">
+                                    <div className="w-14 h-14 shrink-0 rounded-2xl border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-black text-xl group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xl group-hover:shadow-indigo-600/40">01</div>
+                                    <div className="space-y-1">
+                                        <h4 className="font-black text-xs uppercase tracking-widest text-white flex items-center gap-2">
+                                            Planeación de largo plazo <Zap className="h-3 w-3 text-indigo-400" />
+                                        </h4>
+                                        <p className="text-[11px] font-bold text-indigo-300/60 uppercase tracking-wide">Planeación con visión de futuro</p>
+                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Orientamos las decisiones del territorio mediante una visión compartida, que trasciende los periodos de gobierno y se articula con la política pública.</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-5 group">
-                                    <div className="w-12 h-12 shrink-0 rounded-xl border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-lg group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-lg">02</div>
-                                    <div>
-                                        <h4 className="font-black text-[10px] uppercase tracking-[0.3em] mb-1 text-white">Sostenibilidad</h4>
-                                        <p className="text-xs text-slate-500 leading-relaxed">Garantizamos que los planes superen los periodos de gobierno con enfoque ambiental.</p>
+
+                                <div className="flex gap-6 group">
+                                    <div className="w-14 h-14 shrink-0 rounded-2xl border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-black text-xl group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-xl group-hover:shadow-cyan-600/40">02</div>
+                                    <div className="space-y-1">
+                                        <h4 className="font-black text-xs uppercase tracking-widest text-white flex items-center gap-2">
+                                            Gobernanza colaborativa <Users className="h-3 w-3 text-cyan-400" />
+                                        </h4>
+                                        <p className="text-[11px] font-bold text-cyan-300/60 uppercase tracking-wide">Gobernanza y corresponsabilidad</p>
+                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Construimos esta visión con la participación activa de ciudadanía, academia y sector privado, promoviendo responsabilidades compartidas.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-6 group">
+                                    <div className="w-14 h-14 shrink-0 rounded-2xl border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xl group-hover:shadow-emerald-600/40">03</div>
+                                    <div className="space-y-1">
+                                        <h4 className="font-black text-xs uppercase tracking-widest text-white flex items-center gap-2">
+                                            Decisiones basadas en evidencia <BarChart3 className="h-3 w-3 text-emerald-400" />
+                                        </h4>
+                                        <p className="text-[11px] font-bold text-emerald-300/60 uppercase tracking-wide">Datos para planificar mejor</p>
+                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Integramos información e indicadores territoriales para hacer seguimiento a la visión y apoyar decisiones informadas sobre el futuro de la ciudad.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="relative">
-                            <div className="absolute -inset-10 bg-indigo-500/10 blur-[100px] pointer-events-none"></div>
-                            <div className="rounded-3xl overflow-hidden border border-white/5 shadow-2xl transition-transform hover:scale-[1.02] duration-700">
-                                <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=90" alt="Cali" className="opacity-90 transition-opacity hover:opacity-100" />
+                        
+                        <div className="relative lg:pl-10">
+                            <div className="absolute -inset-4 bg-indigo-500/10 blur-[80px] pointer-events-none rounded-full"></div>
+                            <div className="relative rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl group transition-all duration-700 hover:scale-[1.02]">
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-transparent to-transparent opacity-60 z-10"></div>
+                                <img 
+                                    src="https://images.unsplash.com/photo-1596464716127-f2a82984de30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=90" 
+                                    alt="Cali Ciudad y Naturaleza" 
+                                    className="w-full aspect-[4/5] object-cover opacity-90 transition-transform duration-[10s] group-hover:scale-110" 
+                                />
+                                <div className="absolute bottom-10 left-10 z-20">
+                                    <div className="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Cali: Corazón del Pacífico</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* 4. SALA DE PRENSA */}
-            <section id="sala-prensa" className="py-24 bg-white scroll-mt-20">
+            {/* 4. SALA DE PRENSA - REDESIGNED CAROUSEL */}
+            <section id="sala-prensa" className="py-24 bg-white scroll-mt-20 overflow-hidden">
                 <div className="container mx-auto px-6 max-w-6xl">
-                    <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
                         <div className="text-center md:text-left">
-                            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-1">Sala de Prensa</h2>
-                            <p className="text-slate-400 text-[9px] font-bold uppercase tracking-[0.3em]">Actualidad del Proyecto</p>
+                            <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 block">Cali 500+ en los Medios</span>
+                            <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-1">Sala de Prensa</h2>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                             <button 
-                                onClick={() => setNewsIndex((prev) => (prev - 1 + NEWS.length) % NEWS.length)}
-                                className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:border-slate-900 text-slate-900 transition-all shadow-sm"
+                                onClick={prevNews}
+                                className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm active:scale-90"
                             >
-                                <ChevronLeft className="h-4 w-4" />
+                                <ChevronLeft className="h-5 w-5" />
                             </button>
                             <button 
-                                onClick={() => setNewsIndex((prev) => (prev + 1) % NEWS.length)}
-                                className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:border-slate-900 text-slate-900 transition-all shadow-sm"
+                                onClick={nextNews}
+                                className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm active:scale-90"
                             >
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronRight className="h-5 w-5" />
                             </button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {NEWS.map((item, i) => {
-                            const isVisible = i === newsIndex || (i === (newsIndex + 1) % NEWS.length) || (i === (newsIndex + 2) % NEWS.length);
-                            return (
-                                <div 
-                                    key={i}
-                                    className={`p-6 border border-slate-100 hover:border-indigo-600 transition-all duration-500 group ${!isVisible ? 'hidden md:flex' : 'flex'} flex-col bg-slate-50/20 rounded-2xl h-full cursor-pointer`}
-                                    onClick={() => window.open(item.link, '_blank')}
-                                >
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                            <item.icon className="h-3.5 w-3.5" />
+                    <div className="relative">
+                        <div 
+                            className="flex transition-transform duration-700 ease-[cubic-bezier(0.85,0,0.15,1)]"
+                            style={{ transform: `translateX(-${(newsIndex * 100) / (window.innerWidth < 768 ? 1 : 3)}%)` }}
+                        >
+                            {NEWS.map((item, i) => (
+                                <div key={i} className="w-full md:w-1/3 shrink-0 px-3">
+                                    <div 
+                                        onClick={() => window.open(item.link, '_blank')}
+                                        className="h-full bg-slate-50 border border-slate-100 p-8 rounded-[2rem] hover:bg-white hover:shadow-2xl hover:border-indigo-100 transition-all duration-500 cursor-pointer group flex flex-col relative"
+                                    >
+                                        {/* Logo Centered on Top - Using local assets */}
+                                        <div className="h-16 flex items-center justify-center mb-8">
+                                            <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-500 h-full aspect-video flex items-center justify-center overflow-hidden">
+                                                <img src={item.logo} alt={item.source} className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transition-all opacity-80 group-hover:opacity-100" />
+                                            </div>
                                         </div>
-                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600">{item.type}</span>
-                                    </div>
-                                    <h4 className="font-bold text-slate-900 text-base mb-8 leading-snug min-h-[60px] tracking-tight group-hover:text-indigo-600 transition-colors">
-                                        "{item.title}"
-                                    </h4>
-                                    <div className="mt-auto flex items-center justify-between text-[9px] font-extrabold uppercase text-slate-400 tracking-widest border-t border-slate-100 pt-5">
-                                        <span>{item.source}</span>
-                                        <span>{item.date}</span>
+                                        
+                                        <div className="text-center mb-6">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 block mb-3">{item.source}</span>
+                                            <h4 className="font-black text-slate-900 text-lg leading-tight mb-4 tracking-tight group-hover:text-indigo-600 transition-colors line-clamp-3 min-h-[5.25rem]">
+                                                {item.title}
+                                            </h4>
+                                            <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+                                                {item.summary}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-auto pt-6 border-t border-slate-200 flex items-center justify-between">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.date}</span>
+                                            <span className="flex items-center gap-1.5 text-indigo-600 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Leer Nota <ExternalLink className="h-3 w-3" />
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            );
-                        })}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
@@ -322,7 +387,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-                        {/* Info Column */}
                         <div className="lg:col-span-2 space-y-8">
                             <div className="flex gap-4 cursor-pointer group" onClick={() => window.open("https://wa.me/573173990220", "_blank")}>
                                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
@@ -352,7 +416,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                             </div>
                         </div>
 
-                        {/* Form Column */}
                         <div className="lg:col-span-3">
                             <form className="space-y-4 bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden" onSubmit={handleFormSubmit}>
                                 {formSent ? (
