@@ -221,7 +221,11 @@ const App = () => {
                     <main className="flex-1">
                         <HomeView stats={stats} onAction={handleGoToDashboard} />
                     </main>
-                    <Footer />
+                    <Footer 
+                        activeSection={activeSection} 
+                        setActiveSection={(s) => setActiveSection(s as any)} 
+                        onDashboardAction={handleGoToDashboard}
+                    />
                 </>
             ) : (
                 <div className="flex flex-1 overflow-hidden h-[calc(100vh-73px)]">

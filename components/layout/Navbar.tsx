@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu, X, ChevronRight } from 'lucide-react';
+import { Menu, X, MessageSquare } from 'lucide-react';
 import { CALI, VISION_IMAGE_URL } from '@/utils/constants';
 
 interface NavbarProps {
@@ -18,15 +18,36 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
         { id: 'dashboard', label: 'Dashboard' }
     ];
 
+    const handleContactScroll = () => {
+        if (activeSection !== 'home') {
+            setActiveSection('home');
+            // Pequeño delay para permitir el cambio de vista antes del scroll
+            setTimeout(() => {
+                const element = document.getElementById('contacto');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 100);
+        } else {
+            const element = document.getElementById('contacto');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        setIsMenuOpen(false);
+    };
+
     const handleNav = (id: string) => {
         if (id === 'about') {
             if (activeSection !== 'home') {
                 setActiveSection('home');
                 setTimeout(() => {
-                    document.getElementById('quienes-somos')?.scrollIntoView({ behavior: 'smooth' });
+                    const element = document.getElementById('quienes-somos');
+                    if (element) element.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             } else {
-                document.getElementById('quienes-somos')?.scrollIntoView({ behavior: 'smooth' });
+                const element = document.getElementById('quienes-somos');
+                if (element) element.scrollIntoView({ behavior: 'smooth' });
             }
         } else if (id === 'home') {
             setActiveSection('home');
@@ -66,10 +87,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
                     </button>
                 ))}
                 <button 
-                    onClick={() => onDashboardAction('analitica')}
-                    className="bg-indigo-600 hover:bg-slate-900 text-white px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 active:scale-95"
+                    onClick={handleContactScroll}
+                    className="bg-slate-900 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-900/20 flex items-center gap-2 active:scale-95"
                 >
-                    Explorar Datos <ChevronRight className="h-3.5 w-3.5" />
+                    Contáctanos <MessageSquare className="h-3.5 w-3.5" />
                 </button>
             </div>
 
@@ -91,10 +112,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
                         </button>
                     ))}
                     <button 
-                        onClick={() => onDashboardAction('analitica')}
+                        onClick={handleContactScroll}
                         className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs text-center shadow-xl shadow-indigo-600/20"
                     >
-                        Explorar Datos
+                        Contáctanos
                     </button>
                 </div>
             )}
