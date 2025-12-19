@@ -6,7 +6,7 @@ import { CALI, VISION_IMAGE_URL } from '@/utils/constants';
 interface NavbarProps {
     activeSection: 'home' | 'dashboard';
     setActiveSection: (section: 'home' | 'dashboard') => void;
-    onDashboardAction: (view: 'analitica' | 'ecosistema' | 'mapa') => void;
+    onDashboardAction: (view: 'analitica' | 'ecosistema' | 'mapa' | 'datos') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection, onDashboardAction }) => {

@@ -10,7 +10,7 @@ import { CALI } from '@/utils/constants';
 
 interface HomeViewProps {
     stats: Stats;
-    onAction: (view: 'analitica' | 'ecosistema' | 'mapa') => void;
+    onAction: (view: 'analitica' | 'ecosistema' | 'mapa' | 'datos') => void;
 }
 
 const HERO_SLIDES = [
@@ -29,7 +29,7 @@ const HERO_SLIDES = [
         title: "Cuidar la biodiversidad es planificar el futuro",
         description: "Gestionamos el territorio reconociendo sus ecosistemas y saberes comunitarios para una Cali resiliente.",
         image: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
-        cta1: "Mapa de proyectos",
+        cta1: "Mapa de instrumentos",
         cta2: "Ver análisis territorial",
         target1: 'mapa',
         target2: 'analitica'
@@ -39,7 +39,7 @@ const HERO_SLIDES = [
         title: "La ciudad que soñamos la construimos juntos",
         description: "Una visión construida desde la participación ciudadana, donde el bienestar y la equidad están en el centro.",
         image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
-        cta1: "Conocer el ecosistema",
+        cta1: "Ver instrumentos",
         cta2: "Participación ciudadana",
         target1: 'ecosistema',
         target2: 'ecosistema'
@@ -52,7 +52,7 @@ const HERO_SLIDES = [
         cta1: "Ir al dashboard",
         cta2: "Explorar datos",
         target1: 'analitica',
-        target2: 'analitica'
+        target2: 'datos'
     }
 ];
 
@@ -104,7 +104,18 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
     const [newsIndex, setNewsIndex] = useState(0);
     const [formSent, setFormSent] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const [itemsPerView, setItemsPerView] = useState(3);
     const slideContainerRef = useRef<HTMLDivElement>(null);
+
+    // Dynamic items per view for news slider
+    useEffect(() => {
+        const handleResize = () => {
+            setItemsPerView(window.innerWidth < 768 ? 1 : 3);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -126,13 +137,19 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
         }, 1500);
     };
 
-    const nextNews = () => setNewsIndex((prev) => (prev + 1) % NEWS.length);
-    const prevNews = () => setNewsIndex((prev) => (prev - 1 + NEWS.length) % NEWS.length);
+    // NEWS SLIDER LOGIC FIXED: Only move through available content
+    const maxNewsIndex = Math.max(0, NEWS.length - itemsPerView);
+    const nextNews = () => {
+        setNewsIndex((prev) => (prev >= maxNewsIndex ? 0 : prev + 1));
+    };
+    const prevNews = () => {
+        setNewsIndex((prev) => (prev <= 0 ? maxNewsIndex : prev - 1));
+    };
 
     return (
         <div className="bg-white overflow-x-hidden font-['Plus_Jakarta_Sans']">
             
-            {/* 1. CARRUSEL */}
+            {/* 1. CARRUSEL HERO */}
             <section className="relative h-[300px] md:h-[400px] bg-[#0F172A] overflow-hidden group">
                 <div 
                     ref={slideContainerRef}
@@ -311,7 +328,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                 </div>
             </section>
 
-            {/* 4. SALA DE PRENSA - REDESIGNED CAROUSEL */}
+            {/* 4. SALA DE PRENSA */}
             <section id="sala-prensa" className="py-24 bg-white scroll-mt-20 overflow-hidden">
                 <div className="container mx-auto px-6 max-w-6xl">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
@@ -338,7 +355,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                     <div className="relative">
                         <div 
                             className="flex transition-transform duration-700 ease-[cubic-bezier(0.85,0,0.15,1)]"
-                            style={{ transform: `translateX(-${(newsIndex * 100) / (window.innerWidth < 768 ? 1 : 3)}%)` }}
+                            style={{ transform: `translateX(-${(newsIndex * 100) / itemsPerView}%)` }}
                         >
                             {NEWS.map((item, i) => (
                                 <div key={i} className="w-full md:w-1/3 shrink-0 px-3">
@@ -346,7 +363,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                         onClick={() => window.open(item.link, '_blank')}
                                         className="h-full bg-slate-50 border border-slate-100 p-8 rounded-[2rem] hover:bg-white hover:shadow-2xl hover:border-indigo-100 transition-all duration-500 cursor-pointer group flex flex-col relative"
                                     >
-                                        {/* Logo Centered on Top - Using local assets */}
                                         <div className="h-16 flex items-center justify-center mb-8">
                                             <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-500 h-full aspect-video flex items-center justify-center overflow-hidden">
                                                 <img src={item.logo} alt={item.source} className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transition-all opacity-80 group-hover:opacity-100" />
@@ -392,6 +408,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                     <MessageCircle className="h-6 w-6" />
                                 </div>
+                                {/** WhatsApp content preserved */}
                                 <div>
                                     <h4 className="font-black text-xs uppercase tracking-widest text-slate-900 mb-1">WhatsApp Oficial</h4>
                                     <p className="text-sm text-slate-500">+57 317 399 0220</p>
@@ -402,12 +419,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
                                     <Mail className="h-6 w-6" />
                                 </div>
+                                {/** Email content preserved */}
                                 <div>
                                     <h4 className="font-black text-xs uppercase tracking-widest text-slate-900 mb-1">Correo Electrónico</h4>
                                     <p className="text-sm text-slate-500">paulajanetam@gmail.com</p>
                                     <p className="text-sm text-slate-500">info@cali500.gov.co</p>
                                 </div>
                             </div>
+                            {/** Attention box preserved */}
                             <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
                                 <h4 className="font-black text-[10px] uppercase tracking-widest text-indigo-600 mb-3">Atención Directa</h4>
                                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
@@ -425,7 +444,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                         </div>
                                         <h3 className="text-2xl font-black text-slate-900 mb-2">¡Mensaje Enviado!</h3>
                                         <p className="text-slate-500 text-center text-sm mb-6">Gracias por contactarnos. Nuestro equipo te responderá a la brevedad posible.</p>
-                                        <button onClick={() => setFormSent(false)} className="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline">Enviar otro mensaje</button>
+                                        <button type="button" onClick={() => setFormSent(false)} className="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline">Enviar otro mensaje</button>
                                     </div>
                                 ) : null}
 

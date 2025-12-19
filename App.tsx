@@ -11,6 +11,7 @@ import { Footer } from './components/layout/Footer';
 import { HomeView } from './views/HomeView';
 import { AnalyticsView } from './components/views/AnalyticsView';
 import { EcosystemView } from './components/views/EcosystemView';
+import { DataView } from './components/views/DataView';
 import { CircularMap } from './components/CircularMap';
 import { InstrumentDrawer } from './components/InstrumentDrawer';
 import { LoginModal } from './components/auth/LoginModal';
@@ -24,13 +25,13 @@ const App = () => {
     const [isLoadingData, setIsLoadingData] = useState(true);
 
     const [activeSection, setActiveSection] = useState<'home' | 'dashboard'>('home');
-    const [currentView, setCurrentView] = useState<'analitica' | 'ecosistema' | 'mapa'>('analitica');
+    const [currentView, setCurrentView] = useState<'analitica' | 'ecosistema' | 'mapa' | 'datos'>('analitica');
     
     const [selectedInstrument, setSelectedInstrument] = useState<Instrumento | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterEje, setFilterEje] = useState('Todos');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Default open on desktop
     const [userRole, setUserRole] = useState<'usuario' | 'administrador'>('usuario');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -61,6 +62,11 @@ const App = () => {
         initData();
         const session = sessionStorage.getItem('cali500_auth');
         if (session === 'true') setIsAuthenticated(true);
+
+        // Adjust sidebar on small screens
+        if (window.innerWidth < 768) {
+            setIsSidebarOpen(false);
+        }
     }, []);
 
     const showAlert = (type: 'success' | 'error', title: string, message: string) => {
@@ -68,7 +74,7 @@ const App = () => {
     };
 
     // --- NAV ACTIONS ---
-    const handleGoToDashboard = (view: 'analitica' | 'ecosistema' | 'mapa') => {
+    const handleGoToDashboard = (view: 'analitica' | 'ecosistema' | 'mapa' | 'datos') => {
         setActiveSection('dashboard');
         setCurrentView(view);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -110,10 +116,6 @@ const App = () => {
 
     // --- EXPORT / IMPORT ---
     const handleExportExcel = () => {
-        if (userRole !== 'administrador') {
-            setIsContactModalOpen(true);
-            return;
-        }
         const ws = XLSX.utils.json_to_sheet(instrumentsData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Instrumentos");
@@ -176,7 +178,7 @@ const App = () => {
         sourceData.forEach(i => {
             let st: string = i.estado;
             if (st === 'En proyecto') st = 'En Actualización';
-            if (st === 'Finalizada') st = 'Finalizado';
+            if (st === 'Finalizada' || st === 'Finalizado') st = 'Finalizado';
             if (estadosMap[st] !== undefined) estadosMap[st]++;
         });
         const byType = Object.entries(sourceData.reduce((acc: any, curr) => {
@@ -207,7 +209,7 @@ const App = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-800">
-            {/* NAVBAR GLOBAL PERSISTENTE */}
+            {/* NAVBAR GLOBAL PERSISTENTE - Z-60 */}
             <div className="sticky top-0 z-[60]">
                 <Navbar 
                     activeSection={activeSection === 'home' ? 'home' : 'dashboard'} 
@@ -228,10 +230,10 @@ const App = () => {
                     />
                 </>
             ) : (
-                <div className="flex flex-1 overflow-hidden h-[calc(100vh-73px)]">
+                <div className="flex flex-1 overflow-hidden h-[calc(100vh-73px)] relative bg-slate-100">
                     <Sidebar 
                         currentView={currentView} 
-                        setCurrentView={(view) => { setCurrentView(view); setIsSidebarOpen(false); }} 
+                        setCurrentView={(view) => { setCurrentView(view as any); if (window.innerWidth < 768) setIsSidebarOpen(false); }} 
                         instrumentsCount={instrumentsData.length} 
                         userRole={userRole} 
                         handleResetData={() => {}}
@@ -240,7 +242,8 @@ const App = () => {
                         isOpen={isSidebarOpen}
                         closeSidebar={() => setIsSidebarOpen(false)}
                     />
-                    <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+                    {/* Contenido Principal con margen dinámico para no solapar el sidebar en desktop */}
+                    <div className={`flex-1 flex flex-col min-w-0 h-full relative overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-48' : 'ml-0'}`}>
                         <Header 
                             currentView={currentView}
                             searchTerm={searchTerm}
@@ -252,20 +255,23 @@ const App = () => {
                             userRole={userRole}
                             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
-                        <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth custom-scrollbar bg-slate-50/50">
-                            {currentView === 'analitica' && <AnalyticsView stats={stats} />}
+                        <div className="flex-1 overflow-y-auto p-0 scroll-smooth custom-scrollbar bg-slate-50/50">
+                            {currentView === 'analitica' && <div className="p-4 md:p-6"><AnalyticsView stats={stats} /></div>}
                             {currentView === 'ecosistema' && (
-                                <EcosystemView 
-                                    groupedData={groupedData} 
-                                    userRole={userRole} 
-                                    openCreateModal={openCreateModal} 
-                                    setUserRole={setUserRole} 
-                                    setSelectedInstrument={setSelectedInstrument} 
-                                    handleDeleteInstrument={handleDeleteInstrument}
-                                    onAdminRequest={() => setIsLoginOpen(true)}
-                                />
+                                <div className="p-4 md:p-6">
+                                    <EcosystemView 
+                                        groupedData={groupedData} 
+                                        userRole={userRole} 
+                                        openCreateModal={openCreateModal} 
+                                        setUserRole={setUserRole} 
+                                        setSelectedInstrument={setSelectedInstrument} 
+                                        handleDeleteInstrument={handleDeleteInstrument}
+                                        onAdminRequest={() => setIsLoginOpen(true)}
+                                    />
+                                </div>
                             )}
                             {currentView === 'mapa' && <CircularMap instruments={filteredData} onSelect={setSelectedInstrument} />}
+                            {currentView === 'datos' && <div className="p-4 md:p-6"><DataView instruments={filteredData} onSelect={setSelectedInstrument} /></div>}
                         </div>
                     </div>
                 </div>
