@@ -51,19 +51,21 @@ const App = () => {
                     setInstrumentsData(cloudData);
                     setIsLocalMode(false);
                 } else {
-                    // Fallback a LocalStorage o Seed
                     const local = localStorage.getItem('cali500_local_data');
                     if (local) {
                         setInstrumentsData(JSON.parse(local));
                         setIsLocalMode(true);
                     } else {
                         setInstrumentsData(instrumentos as Instrumento[]);
+                        // Intentamos poblar la nube si está vacía
                         await seedInstruments(instrumentos);
                     }
                 }
             } catch (error) {
                 console.error("Error inicializando datos:", error);
-                setInstrumentsData(instrumentos as Instrumento[]);
+                const local = localStorage.getItem('cali500_local_data');
+                setInstrumentsData(local ? JSON.parse(local) : (instrumentos as Instrumento[]));
+                setIsLocalMode(true);
             } finally {
                 setIsLoadingData(false);
             }
@@ -105,7 +107,7 @@ const App = () => {
                 showAlert('error', 'Memoria Llena', 'La base de datos en la nube está llena. Los cambios se guardaron localmente en este navegador.');
             }
         } else {
-            showAlert('success', 'Cambios Guardados', `El instrumento "${updated.nombre}" se actualizó y sincronizó.`);
+            showAlert('success', 'Cambios Guardados', `El instrumento "${updated.nombre}" se sincronizó correctamente.`);
         }
     };
 
@@ -126,7 +128,7 @@ const App = () => {
                 localStorage.removeItem('cali500_local_data');
                 setInstrumentsData(instrumentos as Instrumento[]);
                 await seedInstruments(instrumentos);
-                showAlert('success', 'Mantenimiento Exitoso', 'El servidor ha sido vaciado y reiniciado con la data base.');
+                showAlert('success', 'Mantenimiento Exitoso', 'El servidor ha sido vaciado y reiniciado.');
             }
         }
     };
@@ -143,6 +145,8 @@ const App = () => {
         if (!res.success) {
             localStorage.setItem('cali500_local_data', JSON.stringify(newData));
             setIsLocalMode(true);
+        } else {
+            showAlert('success', 'Creado', 'Instrumento creado y guardado en la nube.');
         }
     };
 
@@ -195,6 +199,7 @@ const App = () => {
                     setInstrumentsData(combined);
                     localStorage.setItem('cali500_local_data', JSON.stringify(combined));
                     for (const item of newItems) await saveInstrument(item);
+                    showAlert('success', 'Importación Exitosa', `${newItems.length} instrumentos importados.`);
                 }
             } catch (error) {
                 showAlert('error', 'Error', "Fallo al leer el archivo Excel.");
@@ -207,8 +212,7 @@ const App = () => {
     const filteredData = useMemo(() => {
         return instrumentsData.filter(item => {
             const matchesSearch = item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                item.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                String(item.id).includes(searchTerm);
+                                item.tipo.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesEje = filterEje === 'Todos' || item.eje === filterEje;
             return matchesSearch && matchesEje;
         });
@@ -267,7 +271,6 @@ const App = () => {
                     <main className="flex-1">
                         <HomeView stats={stats} onAction={handleGoToDashboard} />
                     </main>
-                    {/* El Footer solo aparece en la sección Home */}
                     <Footer 
                         activeSection={activeSection} 
                         setActiveSection={(s) => setActiveSection(s as any)} 
