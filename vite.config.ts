@@ -18,7 +18,8 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './'),
+        // Fix: Use path.resolve('./') to get current working directory instead of process.cwd() to avoid type issues with 'process'
+        '@': path.resolve('./'),
       }
     }
   };

@@ -91,7 +91,8 @@ export const InstrumentDrawer: React.FC<InstrumentDrawerProps> = ({ instrument, 
             }
 
             try {
-                const uploadedFile = await uploadFileToBackend(file, (percent) => {
+                // Fix: Explicitly cast uploadedFile to any to access the .filename property, resolving the "Property 'filename' does not exist on type 'unknown'" error.
+                const uploadedFile: any = await uploadFileToBackend(file, (percent) => {
                     setUploadProgress(prev => ({ ...prev, [prefix]: percent }));
                 });
                 

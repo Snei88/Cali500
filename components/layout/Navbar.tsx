@@ -21,7 +21,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
     const handleContactScroll = () => {
         if (activeSection !== 'home') {
             setActiveSection('home');
-            // Pequeño delay para permitir el cambio de vista antes del scroll
             setTimeout(() => {
                 const element = document.getElementById('contacto');
                 if (element) {
@@ -68,7 +67,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
                 </div>
             </div>
 
-            {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-10">
                 {navLinks.map(link => (
                     <button 
@@ -94,12 +92,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
                 </button>
             </div>
 
-            {/* Mobile Toggle */}
             <button className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {isMenuOpen ? <X /> : <Menu />}
             </button>
 
-            {/* Mobile Menu */}
             {isMenuOpen && (
                 <div className="absolute top-full left-0 w-full bg-white border-b border-slate-100 p-8 flex flex-col gap-6 md:hidden animate-in slide-in-from-top-4 shadow-2xl">
                     {navLinks.map(link => (
