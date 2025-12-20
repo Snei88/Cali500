@@ -17,6 +17,7 @@ import { InstrumentDrawer } from './components/InstrumentDrawer';
 import { LoginModal } from './components/auth/LoginModal';
 import { AlertModal } from './components/ui/AlertModal';
 import { ContactModal } from './components/ui/ContactModal';
+import { ChatBot } from './components/ChatBot';
 import { getInstruments, saveInstrument, deleteInstrument, seedInstruments, purgeDatabase } from './services/api';
 
 const App = () => {
@@ -324,6 +325,7 @@ const App = () => {
             <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onLogin={(s) => { if(s){ setIsAuthenticated(true); setUserRole('administrador'); sessionStorage.setItem('cali500_auth', 'true'); setIsLoginOpen(false); }}} />
             <AlertModal isOpen={alertConfig.isOpen} type={alertConfig.type} title={alertConfig.title} message={alertConfig.message} onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })} />
             <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
+            <ChatBot />
         </div>
     );
 };
