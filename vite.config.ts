@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   // Carga las variables de entorno del archivo .env
-  const env = loadEnv(mode, process.cwd(), '');
+  // Fix: Use path.resolve() instead of process.cwd() to resolve typing error where 'cwd' is not recognized on the Process type
+  const env = loadEnv(mode, path.resolve(), '');
 
   return {
     base: '/Cali500/', // Requerido para GitHub Pages
@@ -20,7 +21,8 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './'),
+        // Fix: Use path.resolve() instead of __dirname which is not available in ES modules/TypeScript configuration without additional setup
+        '@': path.resolve('./'),
       },
     },
     build: {

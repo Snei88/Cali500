@@ -94,7 +94,7 @@ export const LegalView: React.FC<LegalViewProps> = ({ type, onBack }) => {
                     <div className="mt-16 p-8 bg-slate-50 rounded-3xl border border-slate-100 border-dashed text-center">
                         <p className="text-xs text-slate-500 font-medium">
                             Última actualización: Agosto 2025. Para más información, contacte a: 
-                            <br/><span className="text-indigo-600 font-bold">info@cali500.gov.co</span>
+                            <br/><span className="text-indigo-600 font-bold">gerenciacali500@gmail.com</span>
                         </p>
                     </div>
                 </div>

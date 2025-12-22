@@ -12,7 +12,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
     if (!isOpen) return null;
 
     const whatsappNumber = "573173990220";
-    const email = "paulajanetam@gmail.com";
+    const email = "gerenciacali500@gmail.com";
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=Hola,%20estoy%20interesado%20en%20la%20información%20completa%20del%20dashboard%20Visión%20Cali%20500+.`;
 
     return (
@@ -60,7 +60,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                             </div>
                             <div>
                                 <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5">WhatsApp</span>
-                                <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">+57 317 399 0220</span>
+                                <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">+57 3178055480</span>
                             </div>
                         </a>
 

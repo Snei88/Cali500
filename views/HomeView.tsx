@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-    ChevronRight, ChevronLeft, ArrowRight, 
-    Target, Users, Activity, MessageCircle, FileText, 
-    Send, User, AtSign, Smartphone, Check, Zap, BarChart3, ExternalLink,
-    Mail
+    ChevronRight, ChevronLeft, CheckCircle2, Newspaper, ArrowRight, 
+    Twitter, Target, Users, Activity, Mail, MessageCircle, FileText, Globe, Info, 
+    Send, User, AtSign, Smartphone, Check, Zap, Eye, BarChart3, ExternalLink,
+    Search, Library, Map as MapIcon, Database, LayoutDashboard
 } from 'lucide-react';
 import { Stats } from '@/types';
 import { CALI } from '@/utils/constants';
@@ -64,7 +64,7 @@ const NEWS = [
         date: "17 Sep 2024",
         summary: "La iniciativa Cali500+ logró adhesión de gremios empresariales, sectores productivos y academia, destacando la cooperación intersectorial.",
         link: "https://www.semana.com",
-        logo: "https://page.gensparksite.com/v1/base64_upload/7857d4726c2438c823439486f03767f4"
+        logo: "/assets/semana.png"
     },
     {
         source: "Cali Stereo Online",
@@ -72,7 +72,7 @@ const NEWS = [
         date: "22 Abr 2025",
         summary: "El urbanista internacional Young-Hoon Kwaak visitó la ciudad para apoyar la visión sostenible del Plan Cali 500+.",
         link: "https://calistereofm.com",
-        logo: "https://page.gensparksite.com/v1/base64_upload/9f848731362e4f0144969248f03767f4"
+        logo: "/assets/cali_stereo_online.png"
     },
     {
         source: "El País",
@@ -80,7 +80,7 @@ const NEWS = [
         date: "24 Jul 2025",
         summary: "La Administración Distrital rindió cuentas de los avances del plan Cali 500+, con participación de gremios, universidades y sociedad civil.",
         link: "https://www.elpais.com.co",
-        logo: "https://page.gensparksite.com/v1/base64_upload/38d821369c2e4f0184969248f03767f4"
+        logo: "/assets/el_pais.png"
     },
     {
         source: "El País",
@@ -88,7 +88,7 @@ const NEWS = [
         date: "31 Jul 2025",
         summary: "Presentación pública de la visión Cali 500+, destacando la participación de diversos sectores para construir un futuro equitativo.",
         link: "https://www.elpais.com.co",
-        logo: "https://page.gensparksite.com/v1/base64_upload/38d821369c2e4f0184969248f03767f4"
+        logo: "/assets/el_pais.png"
     },
     {
         source: "Diario del Cauca",
@@ -96,7 +96,7 @@ const NEWS = [
         date: "01 Ago 2025",
         summary: "El plan fue socializado con medios de comunicación, resaltando el diálogo y el trabajo conjunto para impulsar la hoja de ruta.",
         link: "https://diariodelcauca.com.co",
-        logo: "https://page.gensparksite.com/v1/base64_upload/1f848731362e4f0144969248f03767f4"
+        logo: "/assets/diario.png"
     }
 ];
 
@@ -108,6 +108,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
     const [itemsPerView, setItemsPerView] = useState(3);
     const slideContainerRef = useRef<HTMLDivElement>(null);
 
+    // Dynamic items per view for news slider
     useEffect(() => {
         const handleResize = () => {
             setItemsPerView(window.innerWidth < 768 ? 1 : 3);
@@ -119,18 +120,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            handleNextSlide();
+            setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
         }, 8000);
         return () => clearInterval(timer);
-    }, [currentSlide]);
+    }, []);
 
-    const handleNextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    };
-
-    const handlePrevSlide = () => {
-        setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
-    };
+    const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
 
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -142,6 +138,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
         }, 1500);
     };
 
+    // NEWS SLIDER LOGIC FIXED: Only move through available content
     const maxNewsIndex = Math.max(0, NEWS.length - itemsPerView);
     const nextNews = () => {
         setNewsIndex((prev) => (prev >= maxNewsIndex ? 0 : prev + 1));
@@ -154,7 +151,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
         <div className="bg-white overflow-x-hidden font-['Plus_Jakarta_Sans']">
             
             {/* 1. CARRUSEL HERO */}
-            <section className="relative h-[300px] md:h-[400px] bg-[#0F172A] overflow-hidden group">
+            <section className="relative h-[300px] md:h-[400px] bg-[#0F172A] overflow-hidden group border-b border-indigo-950">
                 <div 
                     ref={slideContainerRef}
                     className="flex h-full transition-transform duration-1000 ease-[cubic-bezier(0.85,0,0.15,1)]"
@@ -162,7 +159,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                 >
                     {HERO_SLIDES.map((slide, index) => (
                         <div key={index} className="w-full h-full shrink-0 relative overflow-hidden">
-                            <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0F172A] via-[#0F172A]/60 to-transparent"></div>
+                            <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0F172A] via-[#0F172A]/40 to-transparent"></div>
                             <div 
                                 className="absolute inset-0 bg-cover bg-center transition-transform duration-[30s] ease-linear scale-110" 
                                 style={{ backgroundImage: `url('${slide.image}')` }}
@@ -204,13 +201,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                 </div>
 
                 <button 
-                    onClick={handlePrevSlide}
+                    onClick={prevSlide}
                     className="absolute left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/20 hover:bg-indigo-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all opacity-0 group-hover:opacity-100 active:scale-90"
                 >
                     <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button 
-                    onClick={handleNextSlide}
+                    onClick={nextSlide}
                     className="absolute right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/20 hover:bg-indigo-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all opacity-0 group-hover:opacity-100 active:scale-90"
                 >
                     <ChevronRight className="h-5 w-5" />
@@ -227,40 +224,98 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                 </div>
             </section>
 
-            {/* 2. ESTADO DE AVANCE */}
-            <section className="py-20 bg-slate-50 border-b border-slate-100">
+            {/* 2. SISTEMA MACRO DE PLANEACIÓN */}
+            <section className="py-20 bg-white relative overflow-hidden">
                 <div className="container mx-auto px-6 max-w-6xl">
-                    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 text-center md:text-left">
-                        <div>
-                            <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 block">Cifras de Gestión</span>
-                            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Estado de <span className="text-indigo-600">Avance</span></h2>
-                        </div>
-                        <button onClick={() => onAction('analitica')} className="bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95 w-full md:w-auto">
-                            Explorar Analítica Completa
-                        </button>
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Arquitectura de Datos</span>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4">SISTEMA MACRO DE PLANEACIÓN EFICIENTE</h2>
+                        <div className="h-1 w-12 bg-indigo-600 mx-auto rounded-full mb-6"></div>
+                        <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                            En esta herramienta encontrarás el seguimiento y análisis de todos los documentos de planeación de Cali de mediano y de largo plazo, y su incidencia en la toma de decisiones en el presente.
+                        </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <div className="p-8 bg-white rounded-3xl border border-slate-200 text-center hover:shadow-xl hover:-translate-y-1 transition-all group">
-                            <Activity className="h-8 w-8 mx-auto text-indigo-600 mb-4 group-hover:scale-110 transition-transform" />
-                            <span className="block text-5xl font-black text-slate-900 tracking-tighter mb-1">{stats.cobertura}%</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cobertura de Seguimiento</span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* Analítica */}
+                        <div 
+                            onClick={() => onAction('analitica')}
+                            className="group p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] hover:bg-indigo-600 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-indigo-600/30 hover:-translate-y-2"
+                        >
+                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-500">
+                                <BarChart3 className="h-7 w-7 text-indigo-600" />
+                            </div>
+                            <h3 className="text-lg font-black text-slate-900 group-hover:text-white mb-3 transition-colors">Analítica</h3>
+                            <p className="text-xs text-slate-500 group-hover:text-indigo-100 leading-relaxed transition-colors">
+                                Análisis estadístico y visual de los instrumentos de planeación de mediano y de largo plazo para una gestión basada en evidencia.
+                            </p>
                         </div>
-                        <div className="p-8 bg-indigo-600 rounded-3xl text-center text-white hover:shadow-xl hover:-translate-y-1 transition-all shadow-lg shadow-indigo-600/10">
-                            <Users className="h-8 w-8 mx-auto text-white/80 mb-4" />
-                            <span className="block text-5xl font-black tracking-tighter mb-1">120</span>
-                            <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Entidades Vinculadas</span>
+
+                        {/* Seguimiento y Biblioteca */}
+                        <div 
+                            onClick={() => onAction('ecosistema')}
+                            className="group p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] hover:bg-cyan-600 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-cyan-600/30 hover:-translate-y-2"
+                        >
+                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-500">
+                                <Library className="h-7 w-7 text-cyan-600" />
+                            </div>
+                            <h3 className="text-lg font-black text-slate-900 group-hover:text-white mb-3 transition-colors">Seguimiento y Biblioteca</h3>
+                            <p className="text-xs text-slate-500 group-hover:text-cyan-50 leading-relaxed transition-colors">
+                                Monitoreo al cumplimiento de los planes y acceso centralizado al repositorio de documentos oficiales y observatorios.
+                            </p>
                         </div>
-                        <div className="p-8 bg-white rounded-3xl border border-slate-200 text-center hover:shadow-xl hover:-translate-y-1 transition-all group">
-                            <Target className="h-8 w-8 mx-auto text-amber-600 mb-4 group-hover:scale-110 transition-transform" />
-                            <span className="block text-5xl font-black text-slate-900 tracking-tighter mb-1">{stats.total}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Instrumentos Activos</span>
+
+                        {/* Mapa Circular */}
+                        <div 
+                            onClick={() => onAction('mapa')}
+                            className="group p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] hover:bg-emerald-600 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-emerald-600/30 hover:-translate-y-2"
+                        >
+                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-500">
+                                <MapIcon className="h-7 w-7 text-emerald-600" />
+                            </div>
+                            <h3 className="text-lg font-black text-slate-900 group-hover:text-white mb-3 transition-colors">Mapa Circular</h3>
+                            <p className="text-xs text-slate-500 group-hover:text-emerald-50 leading-relaxed transition-colors">
+                                Visualización interactiva de la distribución temporal y sectorial de todos los instrumentos de la visión Cali 500+.
+                            </p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* 3. QUIÉNES SOMOS */}
+            {/* 3. ESTADO DE AVANCE (KPIs DINÁMICOS) */}
+            <section className="py-20 bg-slate-50 border-y border-slate-100">
+                <div className="container mx-auto px-6 max-w-6xl">
+                    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 text-center md:text-left">
+                        <div>
+                            <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 block">Cifras en Tiempo Real</span>
+                            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Estado de <span className="text-indigo-600">Avance</span></h2>
+                        </div>
+                        <button onClick={() => onAction('analitica')} className="bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95 w-full md:w-auto flex items-center justify-center gap-2">
+                            Ver Dashboard de Datos <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                         <div className="p-8 bg-white rounded-[2rem] border border-slate-200 text-center hover:shadow-xl hover:-translate-y-1 transition-all group">
+                            <Activity className="h-8 w-8 mx-auto text-indigo-600 mb-4 group-hover:scale-110 transition-transform" />
+                            <span className="block text-5xl font-black text-slate-900 tracking-tighter mb-1">{stats.cobertura}%</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Seguimiento Activo</span>
+                        </div>
+                        <div className="p-8 bg-indigo-600 rounded-[2rem] text-center text-white hover:shadow-xl hover:-translate-y-1 transition-all shadow-lg shadow-indigo-600/10">
+                            <Zap className="h-8 w-8 mx-auto text-white/80 mb-4" />
+                            <span className="block text-5xl font-black tracking-tighter mb-1">{stats.estadosMap['En Ejecución']}</span>
+                            <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Ejecución Operativa</span>
+                        </div>
+                        <div className="p-8 bg-white rounded-[2rem] border border-slate-200 text-center hover:shadow-xl hover:-translate-y-1 transition-all group">
+                            <Library className="h-8 w-8 mx-auto text-amber-600 mb-4 group-hover:scale-110 transition-transform" />
+                            <span className="block text-5xl font-black text-slate-900 tracking-tighter mb-1">{stats.total}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Biblioteca Estratégica</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 4. QUIÉNES SOMOS */}
             <section id="quienes-somos" className="py-24 bg-[#0F172A] text-white relative scroll-mt-20 overflow-hidden">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-indigo-500/5 blur-[120px] pointer-events-none"></div>
                 <div className="container mx-auto px-6 max-w-6xl relative z-10">
@@ -284,9 +339,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                             Planeación de largo plazo <Zap className="h-3 w-3 text-indigo-400" />
                                         </h4>
                                         <p className="text-[11px] font-bold text-indigo-300/60 uppercase tracking-wide">Planeación con visión de futuro</p>
-                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Orientamos las decisiones del territorio mediante una visión compartida, que trasciende los periodos de gobierno.</p>
+                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Orientamos las decisiones del territorio mediante una visión compartida, que trasciende los periodos de gobierno y se articula con la política pública.</p>
                                     </div>
                                 </div>
+
                                 <div className="flex gap-6 group">
                                     <div className="w-14 h-14 shrink-0 rounded-2xl border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-black text-xl group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-xl group-hover:shadow-cyan-600/40">02</div>
                                     <div className="space-y-1">
@@ -294,9 +350,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                             Gobernanza colaborativa <Users className="h-3 w-3 text-cyan-400" />
                                         </h4>
                                         <p className="text-[11px] font-bold text-cyan-300/60 uppercase tracking-wide">Gobernanza y corresponsabilidad</p>
-                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Construimos esta visión con la participación activa de ciudadanía, academia y sector privado.</p>
+                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Construimos esta visión con la participación activa de ciudadanía, academia y sector privado, promoviendo responsabilidades compartidas.</p>
                                     </div>
                                 </div>
+
                                 <div className="flex gap-6 group">
                                     <div className="w-14 h-14 shrink-0 rounded-2xl border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xl group-hover:shadow-emerald-600/40">03</div>
                                     <div className="space-y-1">
@@ -304,7 +361,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                             Decisiones basadas en evidencia <BarChart3 className="h-3 w-3 text-emerald-400" />
                                         </h4>
                                         <p className="text-[11px] font-bold text-emerald-300/60 uppercase tracking-wide">Datos para planificar mejor</p>
-                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Integramos información e indicadores territoriales para hacer seguimiento a la visión y apoyar decisiones informadas.</p>
+                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Integramos información e indicadores territoriales para hacer seguimiento a la visión y apoyar decisiones informadas sobre el futuro de la ciudad.</p>
                                     </div>
                                 </div>
                             </div>
@@ -313,18 +370,24 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                         <div className="relative lg:pl-10">
                             <div className="absolute -inset-4 bg-indigo-500/10 blur-[80px] pointer-events-none rounded-full"></div>
                             <div className="relative rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl group transition-all duration-700 hover:scale-[1.02]">
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-transparent to-transparent opacity-60 z-10"></div>
                                 <img 
                                     src="https://images.unsplash.com/photo-1596464716127-f2a82984de30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=90" 
-                                    alt="Cali" 
+                                    alt="Cali Ciudad y Naturaleza" 
                                     className="w-full aspect-[4/5] object-cover opacity-90 transition-transform duration-[10s] group-hover:scale-110" 
                                 />
+                                <div className="absolute bottom-10 left-10 z-20">
+                                    <div className="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Cali: Corazón del Pacífico</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* 4. SALA DE PRENSA */}
+            {/* 5. SALA DE PRENSA */}
             <section id="sala-prensa" className="py-24 bg-white scroll-mt-20 overflow-hidden">
                 <div className="container mx-auto px-6 max-w-6xl">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
@@ -389,7 +452,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                 </div>
             </section>
 
-            {/* 5. CONTACTO */}
+            {/* 6. FORMULARIO DE CONTACTO */}
             <section id="contacto" className="py-24 bg-slate-50 relative scroll-mt-20">
                 <div className="container mx-auto px-6 max-w-5xl">
                     <div className="text-center mb-16">
@@ -400,13 +463,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
                         <div className="lg:col-span-2 space-y-8">
-                            <div className="flex gap-4 cursor-pointer group" onClick={() => window.open("https://wa.me/573173990220", "_blank")}>
+                            <div className="flex gap-4 cursor-pointer group" onClick={() => window.open("https://wa.me/573178055480", "_blank")}>
                                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                     <MessageCircle className="h-6 w-6" />
                                 </div>
                                 <div>
                                     <h4 className="font-black text-xs uppercase tracking-widest text-slate-900 mb-1">WhatsApp Oficial</h4>
-                                    <p className="text-sm text-slate-500">+57 317 399 0220</p>
+                                    <p className="text-sm text-slate-500">+57 317 805 5480</p>
                                     <span className="text-indigo-600 text-xs font-bold hover:underline mt-1 inline-block">Hablar ahora</span>
                                 </div>
                             </div>
@@ -416,48 +479,71 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                                 </div>
                                 <div>
                                     <h4 className="font-black text-xs uppercase tracking-widest text-slate-900 mb-1">Correo Electrónico</h4>
-                                    <p className="text-sm text-slate-500">paulajanetam@gmail.com</p>
+                                    <p className="text-sm text-slate-500">gerenciacali500@gmail.com</p>
                                 </div>
                             </div>
                             <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
                                 <h4 className="font-black text-[10px] uppercase tracking-widest text-indigo-600 mb-3">Atención Directa</h4>
                                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                                    Si eres un organismo internacional o academia buscando datasets específicos, solicita información adicional.
+                                    Si eres un organismo internacional o academia buscando datasets específicos, solicita una llave de acceso API.
                                 </p>
                             </div>
                         </div>
 
                         <div className="lg:col-span-3">
                             <form className="space-y-4 bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden" onSubmit={handleFormSubmit}>
-                                {formSent && (
+                                {formSent ? (
                                     <div className="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
                                         <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
                                             <Check className="h-8 w-8" />
                                         </div>
                                         <h3 className="text-2xl font-black text-slate-900 mb-2">¡Mensaje Enviado!</h3>
-                                        <p className="text-slate-500 text-center text-sm mb-6">Gracias por contactarnos. Nuestro equipo te responderá pronto.</p>
+                                        <p className="text-slate-500 text-center text-sm mb-6">Gracias por contactarnos. Nuestro equipo te responderá a la brevedad posible.</p>
                                         <button type="button" onClick={() => setFormSent(false)} className="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline">Enviar otro mensaje</button>
                                     </div>
-                                )}
+                                ) : null}
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="relative group">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                        <input required type="text" placeholder="Nombre Completo" className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all" />
+                                        <input 
+                                            required
+                                            type="text" 
+                                            placeholder="Nombre Completo" 
+                                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all"
+                                        />
                                     </div>
                                     <div className="relative group">
                                         <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                        <input required type="email" placeholder="Correo Electrónico" className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all" />
+                                        <input 
+                                            required
+                                            type="email" 
+                                            placeholder="Correo Electrónico" 
+                                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all"
+                                        />
                                     </div>
                                 </div>
                                 <div className="relative group">
                                     <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                    <input type="tel" placeholder="Teléfono" className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all" />
+                                    <input 
+                                        type="tel" 
+                                        placeholder="Teléfono / WhatsApp" 
+                                        className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all"
+                                    />
                                 </div>
                                 <div className="relative group">
-                                    <textarea required placeholder="¿En qué podemos ayudarte?" rows={4} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-3xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all resize-none"></textarea>
+                                    <textarea 
+                                        required
+                                        placeholder="¿En qué podemos ayudarte?" 
+                                        rows={4}
+                                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-3xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all resize-none"
+                                    ></textarea>
                                 </div>
-                                <button disabled={isSending} type="submit" className="w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50">
+                                <button 
+                                    disabled={isSending}
+                                    type="submit"
+                                    className="w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
                                     {isSending ? "Enviando..." : "Enviar Mensaje"} <Send className="h-4 w-4" />
                                 </button>
                                 <p className="text-[9px] text-slate-400 text-center font-medium">Al enviar este formulario aceptas nuestra política de tratamiento de datos personales.</p>

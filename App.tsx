@@ -18,13 +18,14 @@ import { LoginModal } from './components/auth/LoginModal';
 import { AlertModal } from './components/ui/AlertModal';
 import { ContactModal } from './components/ui/ContactModal';
 import { ChatBot } from './components/ChatBot';
-import { getInstruments, saveInstrument, deleteInstrument, seedInstruments, purgeDatabase } from './services/api';
 
 const App = () => {
     // --- STATE ---
     const [instrumentsData, setInstrumentsData] = useState<Instrumento[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
-    const [isLocalMode, setIsLocalMode] = useState(false);
+    
+    // Forzamos modo local siempre para evitar errores de cuota en Atlas
+    const isLocalMode = true;
 
     const [activeSection, setActiveSection] = useState<'home' | 'dashboard'>('home');
     const [currentView, setCurrentView] = useState<'analitica' | 'ecosistema' | 'mapa' | 'datos'>('analitica');
@@ -42,34 +43,18 @@ const App = () => {
     });
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
-    // --- INITIAL DATA LOAD ---
+    // --- INITIAL DATA LOAD (SOLO LOCAL) ---
     useEffect(() => {
-        const initData = async () => {
+        const initData = () => {
             setIsLoadingData(true);
-            try {
-                const cloudData = await getInstruments();
-                if (cloudData && cloudData.length > 0) {
-                    setInstrumentsData(cloudData);
-                    setIsLocalMode(false);
-                } else {
-                    const local = localStorage.getItem('cali500_local_data');
-                    if (local) {
-                        setInstrumentsData(JSON.parse(local));
-                        setIsLocalMode(true);
-                    } else {
-                        setInstrumentsData(instrumentos as Instrumento[]);
-                        // Intentamos poblar la nube si está vacía
-                        await seedInstruments(instrumentos);
-                    }
-                }
-            } catch (error) {
-                console.error("Error inicializando datos:", error);
-                const local = localStorage.getItem('cali500_local_data');
-                setInstrumentsData(local ? JSON.parse(local) : (instrumentos as Instrumento[]));
-                setIsLocalMode(true);
-            } finally {
-                setIsLoadingData(false);
+            const local = localStorage.getItem('cali500_local_storage_data');
+            if (local) {
+                setInstrumentsData(JSON.parse(local));
+            } else {
+                setInstrumentsData(instrumentos as Instrumento[]);
+                localStorage.setItem('cali500_local_storage_data', JSON.stringify(instrumentos));
             }
+            setIsLoadingData(false);
         };
         initData();
         
@@ -95,60 +80,40 @@ const App = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // --- DATA ACTIONS ---
-    const handleUpdateInstrument = async (updated: Instrumento) => {
+    // --- DATA ACTIONS (LOCAL STORAGE) ---
+    const handleUpdateInstrument = (updated: Instrumento) => {
         const newData = instrumentsData.map(item => item.id === updated.id ? updated : item);
         setInstrumentsData(newData);
-        
-        const res = await saveInstrument(updated);
-        if (!res.success) {
-            localStorage.setItem('cali500_local_data', JSON.stringify(newData));
-            setIsLocalMode(true);
-            if (res.error === 'DB_FULL') {
-                showAlert('error', 'Memoria Llena', 'La base de datos en la nube está llena. Los cambios se guardaron localmente en este navegador.');
-            }
-        } else {
-            showAlert('success', 'Cambios Guardados', `El instrumento "${updated.nombre}" se sincronizó correctamente.`);
-        }
+        localStorage.setItem('cali500_local_storage_data', JSON.stringify(newData));
+        showAlert('success', 'Cambios Guardados', `El instrumento se actualizó localmente.`);
     };
 
-    const handleDeleteInstrument = async (id: number, e: React.MouseEvent) => {
+    const handleDeleteInstrument = (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (window.confirm('¿Estás seguro de que deseas eliminar este instrumento?')) {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este instrumento de tu navegador?')) {
             const newData = instrumentsData.filter(item => item.id !== id);
             setInstrumentsData(newData);
-            localStorage.setItem('cali500_local_data', JSON.stringify(newData));
-            await deleteInstrument(id);
+            localStorage.setItem('cali500_local_storage_data', JSON.stringify(newData));
         }
     };
 
-    const handlePurge = async () => {
-        if (window.confirm('¿ELIMINAR TODO EL CONTENIDO DE LA NUBE? Esta acción liberará espacio borrando todos los registros y archivos del servidor.')) {
-            const success = await purgeDatabase();
-            if (success) {
-                localStorage.removeItem('cali500_local_data');
-                setInstrumentsData(instrumentos as Instrumento[]);
-                await seedInstruments(instrumentos);
-                showAlert('success', 'Mantenimiento Exitoso', 'El servidor ha sido vaciado y reiniciado.');
-            }
+    const handlePurge = () => {
+        if (window.confirm('¿REINICIAR DATOS? Se borrarán todos tus cambios locales y se restaurará la lista original.')) {
+            localStorage.removeItem('cali500_local_storage_data');
+            setInstrumentsData(instrumentos as Instrumento[]);
+            showAlert('success', 'Reiniciado', 'Se han restaurado los datos originales.');
         }
     };
 
-    const handleCreateInstrument = async (newItem: Instrumento) => {
+    const handleCreateInstrument = (newItem: Instrumento) => {
         const maxId = instrumentsData.length > 0 ? Math.max(...instrumentsData.map(i => i.id)) : 0;
         const instrumentWithId = { ...newItem, id: maxId + 1 };
         const newData = [...instrumentsData, instrumentWithId];
         setInstrumentsData(newData);
+        localStorage.setItem('cali500_local_storage_data', JSON.stringify(newData));
         setIsCreating(false);
         setSelectedInstrument(null);
-        
-        const res = await saveInstrument(instrumentWithId);
-        if (!res.success) {
-            localStorage.setItem('cali500_local_data', JSON.stringify(newData));
-            setIsLocalMode(true);
-        } else {
-            showAlert('success', 'Creado', 'Instrumento creado y guardado en la nube.');
-        }
+        showAlert('success', 'Creado', 'Instrumento añadido correctamente.');
     };
 
     const openCreateModal = () => {
@@ -166,14 +131,14 @@ const App = () => {
         const ws = XLSX.utils.json_to_sheet(instrumentsData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Instrumentos");
-        XLSX.writeFile(wb, `VisionCali500_${new Date().toISOString().split('T')[0]}.xlsx`);
+        XLSX.writeFile(wb, `VisionCali500_Local_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = async (evt) => {
+        reader.onload = (evt) => {
             const bstr = evt.target?.result;
             if (!bstr) return;
             try {
@@ -198,9 +163,8 @@ const App = () => {
                 if (newItems.length > 0) {
                     const combined = [...instrumentsData, ...newItems];
                     setInstrumentsData(combined);
-                    localStorage.setItem('cali500_local_data', JSON.stringify(combined));
-                    for (const item of newItems) await saveInstrument(item);
-                    showAlert('success', 'Importación Exitosa', `${newItems.length} instrumentos importados.`);
+                    localStorage.setItem('cali500_local_storage_data', JSON.stringify(combined));
+                    showAlert('success', 'Importación Exitosa', `${newItems.length} instrumentos importados localmente.`);
                 }
             } catch (error) {
                 showAlert('error', 'Error', "Fallo al leer el archivo Excel.");
@@ -252,7 +216,7 @@ const App = () => {
         return (
             <div className="flex h-screen items-center justify-center bg-slate-50 flex-col gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                <p className="text-slate-500 font-medium animate-pulse">Sincronizando Visión Cali 500+...</p>
+                <p className="text-slate-500 font-medium">Cargando Visión Cali 500+ Local...</p>
             </div>
         );
     }

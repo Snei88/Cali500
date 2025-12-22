@@ -35,7 +35,8 @@ export const ChatBot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+      // Fix: Strictly follow Gemini API guidelines for initialization using named parameter and direct process.env usage
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const prompt = `
         Eres el asistente oficial de "Visión Cali 500+". 
