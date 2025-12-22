@@ -31,22 +31,19 @@ export interface Instrumento {
     temporalidad: string | number;
     estado: EstadoInstrumento;
     seguimiento: 'Si' | 'No';
-    observatorio: string; // Empty string if none
+    observatorio: string; 
     enlace?: string;
     pdf_informe?: string;
-    description?: string; // Simulated backend field
+    description?: string;
     
-    // Campos para carga de archivo local - Documento Maestro
     archivo_nombre?: string;
     archivo_base64?: string;
     archivo_tipo?: string;
 
-    // Campos para carga de archivo local - Análisis
     archivo_analisis_nombre?: string;
     archivo_analisis_base64?: string;
     archivo_analisis_tipo?: string;
 
-    // Campos para carga de archivo local - Política Pública / Ley
     archivo_ley_nombre?: string;
     archivo_ley_base64?: string;
     archivo_ley_tipo?: string;
@@ -60,4 +57,9 @@ export interface Stats {
     byType: { name: string; value: number }[];
     byEje: { name: string; shortName: string; count: number }[];
     estadosMap: Record<string, number>;
+    semaforoMap: {
+        critico: number;
+        intermedio: number;
+        optimo: number;
+    };
 }
