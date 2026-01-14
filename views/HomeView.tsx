@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
     ChevronRight, ChevronLeft, ArrowRight, 
@@ -18,7 +17,7 @@ const HERO_SLIDES = [
         tag: "VISIÓN DE CIUDAD 2050",
         title: "Cali, referente internacional en sostenibilidad",
         description: "Construimos una visión de largo plazo que cuida la biodiversidad y la interculturalidad como pilares del desarrollo territorial.",
-        image: "https://images.unsplash.com/photo-1542332213-31f87348057f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
+        image: "components/assets/vision_de_ciudad_2050.jpg",
         cta1: "Conocer la visión",
         cta2: "Hoja de ruta 2050",
         target1: 'ecosistema',
@@ -28,7 +27,7 @@ const HERO_SLIDES = [
         tag: "TERRITORIO ADAPTATIVO",
         title: "Cuidar la biodiversidad es planificar el futuro",
         description: "Gestionamos el territorio reconociendo sus ecosistemas y saberes comunitarios para una Cali resiliente.",
-        image: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
+        image: "components/assets/territorio_adaptativo.jpg",
         cta1: "Mapa de instrumentos",
         cta2: "Ver análisis territorial",
         target1: 'mapa',
@@ -38,7 +37,7 @@ const HERO_SLIDES = [
         tag: "BIENESTAR E INTERCULTURALIDAD",
         title: "La ciudad que soñamos la construimos juntos",
         description: "Una visión construida desde la participación ciudadana, donde el bienestar y la equidad están en el centro.",
-        image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
+        image: "components/assets/bienestar.jpg",
         cta1: "Ver instrumentos",
         cta2: "Participación ciudadana",
         target1: 'ecosistema',
@@ -48,7 +47,7 @@ const HERO_SLIDES = [
         tag: "DATOS PARA DECIDIR",
         title: "Datos para decidir, visión para transformar",
         description: "Integramos información estratégica para orientar políticas públicas alineadas con la visión Cali 500+.",
-        image: "https://images.unsplash.com/photo-1579546671170-4342823ed761?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80",
+        image: "components/assets/datos_para_decidir.jpg",
         cta1: "Ir al dashboard",
         cta2: "Explorar datos",
         target1: 'analitica',
@@ -265,7 +264,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
                             <div className="absolute -inset-4 bg-indigo-500/10 blur-[80px] pointer-events-none rounded-full"></div>
                             <div className="relative rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl group">
                                 <img 
-                                    src="https://images.unsplash.com/photo-1596464716127-f2a82984de30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=90" 
+                                    src="components/assets/Vistas hermosas.jpg" 
                                     alt="Cali Ciudad" 
                                     className="w-full aspect-[4/5] object-cover opacity-90 transition-transform duration-[10s] group-hover:scale-110" 
                                 />
