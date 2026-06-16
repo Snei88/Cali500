@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cali500-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cali500
+      POSTGRES_USER: cali500
+      POSTGRES_PASSWORD: cali500_dev
+    ports:
+      - "15432:5432"
+    volumes:
+      - cali500_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  cali500_postgres_data:

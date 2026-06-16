@@ -1,120 +1,83 @@
-
 import React from 'react';
-import { Menu, X, MessageSquare } from 'lucide-react';
-import { CALI, VISION_IMAGE_URL } from '@/utils/constants';
+import { BarChart3, Database, FileStack, Home, MessageSquare } from 'lucide-react';
+import { VISION_IMAGE_URL } from '@/utils/constants';
 
 interface NavbarProps {
-    activeSection: 'home' | 'dashboard';
-    setActiveSection: (section: 'home' | 'dashboard') => void;
-    onDashboardAction: (view: 'analitica' | 'ecosistema' | 'mapa' | 'datos') => void;
+  activeSection: 'home' | 'dashboard';
+  setActiveSection: (section: 'home' | 'dashboard') => void;
+  onDashboardAction: (view: 'analitica' | 'documentos' | 'datos') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection, onDashboardAction }) => {
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const isDashboard = activeSection === 'dashboard';
+  const dashboardItems = [
+    { view: 'analitica' as const, icon: BarChart3, label: 'Gobernanza' },
+    { view: 'documentos' as const, icon: FileStack, label: 'Proyecto LP' },
+    { view: 'datos' as const, icon: Database, label: 'Planeacion LP' }
+  ];
 
-    const navLinks = [
-        { id: 'home', label: 'Inicio' },
-        { id: 'about', label: 'Quiénes Somos' },
-        { id: 'dashboard', label: 'Dashboard' }
-    ];
+  const goHome = () => {
+    setActiveSection('home');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+  };
 
-    const handleContactScroll = () => {
-        if (activeSection !== 'home') {
-            setActiveSection('home');
-            setTimeout(() => {
-                const element = document.getElementById('contacto');
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 100);
-        } else {
-            const element = document.getElementById('contacto');
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-        setIsMenuOpen(false);
-    };
+  const goContact = () => {
+    if (activeSection !== 'home') setActiveSection('home');
+    setTimeout(() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' }), 80);
+  };
 
-    const handleNav = (id: string) => {
-        if (id === 'about') {
-            if (activeSection !== 'home') {
-                setActiveSection('home');
-                setTimeout(() => {
-                    const element = document.getElementById('quienes-somos');
-                    if (element) element.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-            } else {
-                const element = document.getElementById('quienes-somos');
-                if (element) element.scrollIntoView({ behavior: 'smooth' });
-            }
-        } else if (id === 'home') {
-            setActiveSection('home');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } else if (id === 'dashboard') {
-            onDashboardAction('analitica');
-        }
-        setIsMenuOpen(false);
-    };
+  return (
+    <nav className="fixed left-0 right-0 top-3 z-[60] px-3 pointer-events-none md:top-4 md:px-4">
+      <div className={`mx-auto flex h-[64px] max-w-6xl items-center justify-between gap-4 rounded-full px-3 pl-4 shadow-[0_18px_50px_rgba(15,23,42,0.16)] backdrop-blur-xl pointer-events-auto ${isDashboard ? 'border border-slate-200/80 bg-white/90' : 'border border-white/30 bg-transparent'}`}>
+        <button onClick={goHome} className={`flex min-w-0 items-center gap-3 rounded-full py-1 pr-2 text-left transition ${isDashboard ? 'hover:bg-slate-50' : 'hover:bg-white/10'}`}>
+          <img src={VISION_IMAGE_URL} alt="Cali 500+" className="h-10 w-10 shrink-0 rounded-full border border-white/60 bg-white object-cover shadow-sm" />
+          <div className="hidden min-w-0 sm:block">
+            <p className={`truncate text-sm font-bold ${isDashboard ? 'text-[#3A0D7B]' : 'text-white drop-shadow'}`}>Cali 500+</p>
+            <p className={`truncate text-[11px] font-semibold uppercase tracking-[0.08em] ${isDashboard ? 'text-[#F46217]' : 'text-white/80 drop-shadow'}`}>Sistema documental institucional</p>
+          </div>
+        </button>
 
-    return (
-        <nav className="h-[73px] bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => handleNav('home')}>
-                <img src={VISION_IMAGE_URL} alt="Logo" className="h-10 w-auto group-hover:scale-105 transition-transform" />
-                <div className="hidden md:block">
-                    <span className="font-bold text-slate-800 text-lg leading-tight block">Cali 500+</span>
-                    <span className="text-[10px] text-indigo-600 font-black uppercase tracking-[0.2em]">Planeación Distrital</span>
-                </div>
-            </div>
+        <div className={`hidden items-center gap-1 rounded-full border p-1 md:flex ${isDashboard ? 'border-slate-200 bg-slate-50/90' : 'border-white/20 bg-white/10'}`}>
+          <button onClick={goHome} className={`inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold transition hover:bg-white hover:text-[#3A0D7B] hover:shadow-sm ${isDashboard ? 'text-slate-700' : 'text-white'}`}>
+            <Home className="h-4 w-4" />
+            Inicio
+          </button>
+          <button onClick={() => onDashboardAction('analitica')} className={`inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold transition hover:bg-white hover:text-[#3A0D7B] hover:shadow-sm ${isDashboard ? 'text-slate-700' : 'text-white'}`}>
+            <BarChart3 className="h-4 w-4" />
+            {dashboardItems[0].label}
+          </button>
+          <button onClick={() => onDashboardAction('documentos')} className={`inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold transition hover:bg-white hover:text-[#3A0D7B] hover:shadow-sm ${isDashboard ? 'text-slate-700' : 'text-white'}`}>
+            <FileStack className="h-4 w-4" />
+            {dashboardItems[1].label}
+          </button>
+          <button onClick={() => onDashboardAction('datos')} className={`inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold transition hover:bg-white hover:text-[#3A0D7B] hover:shadow-sm ${isDashboard ? 'text-slate-700' : 'text-white'}`}>
+            <Database className="h-4 w-4" />
+            {dashboardItems[2].label}
+          </button>
+        </div>
 
-            <div className="hidden md:flex items-center gap-10">
-                {navLinks.map(link => (
-                    <button 
-                        key={link.id}
-                        onClick={() => handleNav(link.id)}
-                        className={`text-[12px] font-extrabold uppercase tracking-widest transition-all relative py-1 ${
-                            (link.id === 'about' && activeSection === 'home') || activeSection === (link.id as any) 
-                            ? 'text-indigo-600' 
-                            : 'text-slate-400 hover:text-indigo-500'
-                        }`}
-                    >
-                        {link.label}
-                        {(activeSection === (link.id as any) && link.id !== 'about') && (
-                            <span className="absolute -bottom-1 left-0 w-full h-1 bg-indigo-600 rounded-full animate-in fade-in duration-500"></span>
-                        )}
-                    </button>
-                ))}
-                <button 
-                    onClick={handleContactScroll}
-                    className="bg-slate-900 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-900/20 flex items-center gap-2 active:scale-95"
-                >
-                    Contáctanos <MessageSquare className="h-3.5 w-3.5" />
-                </button>
-            </div>
+        <button onClick={goContact} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-[#F46217] px-4 text-sm font-semibold text-white transition hover:bg-[#F52789]">
+          <MessageSquare className="h-4 w-4" />
+          <span className="hidden sm:inline">Contacto</span>
+        </button>
+      </div>
 
-            <button className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                {isMenuOpen ? <X /> : <Menu />}
-            </button>
-
-            {isMenuOpen && (
-                <div className="absolute top-full left-0 w-full bg-white border-b border-slate-100 p-8 flex flex-col gap-6 md:hidden animate-in slide-in-from-top-4 shadow-2xl">
-                    {navLinks.map(link => (
-                        <button 
-                            key={link.id}
-                            onClick={() => handleNav(link.id)}
-                            className={`text-left font-black uppercase tracking-widest text-sm ${activeSection === (link.id as any) ? 'text-indigo-600' : 'text-slate-400'}`}
-                        >
-                            {link.label}
-                        </button>
-                    ))}
-                    <button 
-                        onClick={handleContactScroll}
-                        className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs text-center shadow-xl shadow-indigo-600/20"
-                    >
-                        Contáctanos
-                    </button>
-                </div>
-            )}
-        </nav>
-    );
+      <div className="mx-auto mt-2 flex max-w-6xl gap-1 overflow-x-auto rounded-2xl border border-white/70 bg-white/90 p-1 shadow-[0_14px_34px_rgba(15,23,42,0.18)] backdrop-blur-xl pointer-events-auto md:hidden">
+        <button onClick={goHome} className="inline-flex h-11 min-w-[84px] shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-black text-[#0B1F3A] transition active:bg-blue-50">
+          <Home className="h-4 w-4 text-[#3A0D7B]" />
+          Inicio
+        </button>
+        {dashboardItems.map((item) => (
+          <button
+            key={item.view}
+            onClick={() => onDashboardAction(item.view)}
+            className="inline-flex h-11 min-w-max shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-black text-[#0B1F3A] transition active:bg-blue-50"
+          >
+            <item.icon className="h-4 w-4 text-[#3A0D7B]" />
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
 };

@@ -1,0 +1,253 @@
+--
+-- PostgreSQL database dump
+--
+
+
+-- Dumped from database version 16.14
+-- Dumped by pg_dump version 16.14
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+DROP INDEX IF EXISTS public.instrumentos_visible_idx;
+DROP INDEX IF EXISTS public.instrumentos_fecha_actualizacion_idx;
+ALTER TABLE IF EXISTS ONLY public.instrumentos_planeacion DROP CONSTRAINT IF EXISTS instrumentos_planeacion_pkey;
+ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_pkey;
+ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_email_key;
+ALTER TABLE IF EXISTS public.instrumentos_planeacion ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.admin_users ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE IF EXISTS public.instrumentos_planeacion_id_seq;
+DROP TABLE IF EXISTS public.instrumentos_planeacion;
+DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
+DROP TABLE IF EXISTS public.admin_users;
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: admin_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.admin_users (
+    id integer NOT NULL,
+    email text NOT NULL,
+    password_hash text NOT NULL,
+    nombre text DEFAULT 'Administrador'::text NOT NULL,
+    activo boolean DEFAULT true NOT NULL,
+    fecha_creacion timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: admin_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.admin_users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: admin_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.admin_users_id_seq OWNED BY public.admin_users.id;
+
+
+--
+-- Name: instrumentos_planeacion; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instrumentos_planeacion (
+    id integer NOT NULL,
+    nombre text DEFAULT ''::text NOT NULL,
+    tipo text DEFAULT ''::text NOT NULL,
+    eje text DEFAULT ''::text NOT NULL,
+    fecha_inicio text DEFAULT ''::text NOT NULL,
+    fecha_fin text DEFAULT ''::text NOT NULL,
+    estado text DEFAULT ''::text NOT NULL,
+    link text DEFAULT ''::text NOT NULL,
+    enlace_web text DEFAULT ''::text NOT NULL,
+    documento_url text DEFAULT ''::text NOT NULL,
+    observatorio text DEFAULT ''::text NOT NULL,
+    visible boolean DEFAULT false NOT NULL,
+    validacion_errores jsonb DEFAULT '[]'::jsonb NOT NULL,
+    origen text DEFAULT 'admin'::text NOT NULL,
+    source_row integer,
+    fecha_creacion timestamp with time zone DEFAULT now() NOT NULL,
+    fecha_actualizacion timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: instrumentos_planeacion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.instrumentos_planeacion_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: instrumentos_planeacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.instrumentos_planeacion_id_seq OWNED BY public.instrumentos_planeacion.id;
+
+
+--
+-- Name: admin_users id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_users ALTER COLUMN id SET DEFAULT nextval('public.admin_users_id_seq'::regclass);
+
+
+--
+-- Name: instrumentos_planeacion id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instrumentos_planeacion ALTER COLUMN id SET DEFAULT nextval('public.instrumentos_planeacion_id_seq'::regclass);
+
+
+--
+-- Data for Name: admin_users; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.admin_users (id, email, password_hash, nombre, activo, fecha_creacion) VALUES (1, 'admin@cali500.com.co', 'scrypt:7d1c8da1779420a1e8dcece491601e61:491c0299109263aee6cd804fe83afef5673d878ae9ce023618e050f2d82cf42a76a182517f5b6724aee31be93439e150ca217eff79be9699711eea62e02e490b', 'Administrador Cali 500', true, '2026-06-05 18:48:31.490515+00');
+INSERT INTO public.admin_users (id, email, password_hash, nombre, activo, fecha_creacion) VALUES (2, 'editor@cali500.com.co', 'scrypt:171add4e2a36e261ab036a58bc227951:e232ea537e9ce6dd80cc32dfb714ecdfd5ffeba651a111deccc2f9d5897a0e832ab1333cafa94dd2fb8d6de9793d2dc5ccecd6710ba968bf058c77d524e752ad', 'Editor Cali 500', true, '2026-06-05 18:51:04.291427+00');
+
+
+--
+-- Data for Name: instrumentos_planeacion; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (2, 'VISION CALI 500+', 'Instrumentos Macro', 'Transversal', '2024', '2050', 'En Ejecución', '0.VISION CALI 500+.pdf', 'https://www.cali.gov.co/planeacion/publicaciones/187380/revision-y-ajuste-del-plan-de-ordenamiento-territorial/?genPagdoc10013=4&genPagdoc10012=2&genPagdoc10014=1', '', '', true, '[]', 'excel:hoja-1', 2, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (3, 'Area Metropolitana del Suroccidente - AMSO', 'Normativo', 'Transversal', '2024', 'Permanente', 'Permanente', 'https://drive.google.com/file/d/1oIWfjebTZGvKC2J-eOf58VSBVJ4f5zlg/view?usp=drive_link', 'https://amsocali.com/', '', '', true, '[]', 'excel:hoja-1', 3, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (4, 'Cali Distrito Especial Ley 1933 de 2018', 'Normativo', 'Transversal', '2023', '2050', 'Permanente', 'https://drive.google.com/file/d/18t8By1MvGaGj7Kh9ZiaMcdESKVx8LEus/view?usp=drive_link', 'https://drive.google.com/file/d/18t8By1MvGaGj7Kh9ZiaMcdESKVx8LEus/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 4, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (5, 'Plan de Desarrollo Cali Capital Pacifica de Colombia', 'Instrumentos Macro', 'Transversal', '2024', '2027', 'En Ejecución', 'https://drive.google.com/file/d/1Pd2uT3IRprlCgMMO7JZpuHa5CwPvhjoV/view?usp=drive_link', 'https://www.cali.gov.co/planeacion/publicaciones/186888/plan-de-desarrollo/', '', '', true, '[]', 'excel:hoja-1', 5, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (6, 'Manual De Construccion Sostenible', 'Documento Estratégico', 'Territorio Adaptativo e Inteligente', '2023', 'Permanente', 'En Ejecución', 'https://drive.google.com/file/d/1wBsbXUTiEt-E4fS70Ac5c33coK8l5_eM/view?usp=drive_link', 'https://drive.google.com/file/d/1wBsbXUTiEt-E4fS70Ac5c33coK8l5_eM/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 6, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (7, 'Zonas De Influencia Economica Y Desarrollo', 'Documento Estratégico', 'Competitividad Sostenible', '2023', 'Permanente', 'En Ejecución', 'https://drive.google.com/file/d/12aAPuxbKa8RUe-BeqKf9u-HkA5mSXCFs/view?usp=drive_link', 'https://drive.google.com/file/d/12aAPuxbKa8RUe-BeqKf9u-HkA5mSXCFs/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 7, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (8, 'Politca Pública De Desarrollo Economico', 'Política Pública', 'Competitividad Sostenible', '2020', '2029', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1T7aD6ABhsoXEuNgp7cYMHxhbSwJviF8H/view?usp=drive_link', 'https://drive.google.com/file/d/1T7aD6ABhsoXEuNgp7cYMHxhbSwJviF8H/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 8, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (9, 'PIMU- Plan Integral De Movilidad Urbana', 'Plan', 'Territorio Adaptativo e Inteligente', '2018', '2030', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1d9dL57_0fLjsKYUZECNvXqkt9KHpTnyE/view?usp=drive_link', 'https://drive.google.com/file/d/1d9dL57_0fLjsKYUZECNvXqkt9KHpTnyE/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 9, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (10, 'Politica Pública De Turismo', 'Política Pública', 'Competitividad Sostenible', '2022', '2031', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1e4JH1julHjs0fWFiHsz_MoLnb7pWFCVz/view?usp=drive_link', 'https://drive.google.com/file/d/1e4JH1julHjs0fWFiHsz_MoLnb7pWFCVz/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 10, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (11, 'Politica Pública Deporte Y Actividad Fisica', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2022', '2031', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1U22M0xXkmCgGfmroNcROwB8TbcOlAn5P/view?usp=drive_link', 'https://drive.google.com/file/d/1U22M0xXkmCgGfmroNcROwB8TbcOlAn5P/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 11, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (12, 'Documento Estrategico Cluster Del Deporte- Vision', 'Documento Estratégico', 'Competitividad Sostenible', '2023', '2030', 'En Ejecución', 'https://drive.google.com/file/d/13xvefumsNu9qYsWqUbp0s-aftkpzm2W0/view?usp=drive_link', 'https://drive.google.com/file/d/13xvefumsNu9qYsWqUbp0s-aftkpzm2W0/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 12, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (13, 'Politica Pública De Cultura Ciudadana', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2023', '2032', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/15z1fCfCgEx2EQDm4mUP3Ki2WQXm74oMs/view?usp=drive_link', 'https://drive.google.com/file/d/15z1fCfCgEx2EQDm4mUP3Ki2WQXm74oMs/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 13, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (14, 'Plan De Restauración Ecologica', 'Plan Maestro', 'Territorio Adaptativo e Inteligente', '2016', '2050', 'En Ejecución', 'https://drive.google.com/file/d/1UiggKz_QORB5BGhH5tfI3sgXo0xgoav-/view?usp=drive_link', 'https://archivo.minambiente.gov.co/index.php/bosques-biodiversidad-y-servicios-ecosistematicos/gestion-en-biodiversidad/restauracion-ecologica', '', '|', true, '[]', 'excel:hoja-1', 14, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (15, 'Política Publica de Seguridad Justicia y Convivencia', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2024', '2033', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1e3Oz0UMKcPNWbjwXU7ytDP0Czw-DEwrR/view?usp=drive_link', 'https://www.cali.gov.co/seguridad/publicaciones/184455/politica-publica-de-seguridad-justicia-y-convivencia-ciudadana-de-santiago-de-cali-2024-2033/', '', '', true, '[]', 'excel:hoja-1', 15, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (16, 'Politica Publica de Derechos Humanos', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2022', '2031', 'En Ejecución - Mesa de Asistencia Técnica', 'https://drive.google.com/file/d/1tn6o93wuiZTm4pXefEd7gQoQKZ7DcC59/view?usp=drive_link', 'https://www.cali.gov.co/pazycultura/publicaciones/146279/politica-publica-de-derechos-humanos-y-dih-para-el-municipio-de-santiago-de-cali/', '', '', true, '[]', 'excel:hoja-1', 16, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (17, 'Politica Pública CALI DIVERSIDAD', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2019', '2029', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1IKwNg_MMC7_CC0Baatr5N0TS2TOiTm9d/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/148606/politica-publica-calidiversidad/', '', '', true, '[]', 'excel:hoja-1', 17, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (18, 'Política Pública Seguridad Alimentaria', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2019', '2029', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/11VhGLRcjdoAIqFPfS3XfGy1ycOop7tUh/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/172653/politica-publica-de-soberania-y-seguridad-alimentaria-y-nutricional/', '', '', true, '[]', 'excel:hoja-1', 18, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (19, 'Polticica Pública de Juventudes', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2019', '2029', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1OHJ0QRsGtLAaYLOnZCvco_Bb1J42OP9E/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/180746/politica-publica-de-juventud-instrumento-fundamental-en-la-construccion-del-plan-de-desarrollo-de-cali/', '', '', true, '[]', 'excel:hoja-1', 19, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (20, 'Política Pública Afrocolombiana negra y raizal de Santiago de Cali', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2019', '2029', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1hCQ21lSOvc95dfUp3LK9kBVj89gpwDbV/view?usp=drive_link', 'http://cali.gov.co/bienestar/publicaciones/180746/politica-publica-de-juventud-instrumento-fundamental-en-la-construccion-del-plan-de-desarrollo-de-cali/', '', '', true, '[]', 'excel:hoja-1', 20, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (21, 'Politica Publica de Envejecimiento y vejez', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2017', '2027', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1YhcyChNOxaZTSOY3HdB-MBJxTU_ja1Ob/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/172661/politica-publica-de-envejecimiento-y-vejez-para-las-personas-mayores/', '', '', true, '[]', 'excel:hoja-1', 21, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (22, 'Politica Pública Habitante de Calle', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2019', '2028', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/161qqrVEzBbtd3BxF3mVeWYq9VkguAcal/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/162148/sistema-de-atencion-integral-para-el-habitante-de-la-calle/', '', '', true, '[]', 'excel:hoja-1', 22, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (23, 'Política Pública Mujer', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2022', '2031', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/18GkJv9HZ4hvwFYSR1QjEocnQImAxmQGk/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/172656/politica-publica-reconocimiento-equidad-de-genero-e-igualdad-de-oportunidades-para-las-mujeres/', '', '', true, '[]', 'excel:hoja-1', 23, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (24, 'Plan Municipal de Infraestructura Educativa', 'Plan', 'Bienestar Basado en la Interculturalidad', '2020', '2030', 'En Ejecución', 'https://drive.google.com/file/d/1INDEoIiSjidZXkLG3fgJW1BbOMPZqFxQ/view?usp=drive_link', 'https://www.cali.gov.co/educacion/publicaciones/151242/plan-municipal-de-infraestructura-educativa/', '', '', true, '[]', 'excel:hoja-1', 24, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (25, 'Retos para Trabajar la Calidad Educativa', 'Documento Estratégico', 'Bienestar Basado en la Interculturalidad', '2020', '2036', 'En Ejecución', 'https://drive.google.com/file/d/1y_iStEpm2GCtvUpvsgkFdQbfXbdRlpiq/view?usp=drive_link', 'https://fundacionexe.org.co/document/retos-para-transformar-la-calidad-educativa-de-cali/', '', '', true, '[]', 'excel:hoja-1', 25, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (26, 'Plan Territorial de Salud', 'Plan', 'Bienestar Basado en la Interculturalidad', '2024', '2027', 'En Ejecución - Informes', 'https://drive.google.com/file/d/1ZDj9FcB2L2gjr4VyQfIT6MIxy1asXYV8/view?usp=drive_link', 'https://www.cali.gov.co/salud/publicaciones/49699/plan-territorial-de-salud-cali/', '', '', true, '[]', 'excel:hoja-1', 26, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (27, 'Plan Integral de Gestios de Residuos Solidos PGIR', 'Plan', 'Territorio Adaptativo e Inteligente', '2015', '2027', 'En Ejecución', 'https://drive.google.com/file/d/164KgWiTqv0cNrjhvaTWqygaP8U9ZjR-L/view?usp=drive_link', 'https://www.cali.gov.co/documentos/7925/plan-distrital-de-gestion-del-riesgo/', '', '', true, '[]', 'excel:hoja-1', 27, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (28, 'Plan Distrital de Gestion de Riesgos y Desastres', 'Plan', 'Territorio Adaptativo e Inteligente', '2024', '2027', 'En Ejecución', 'https://drive.google.com/file/d/1XWkNbobE6nZ5B0Cqe7D0fWjOxEwtlzi3/view?usp=drive_link', 'https://www.cali.gov.co/gestiondelriesgo/publicaciones/182649/plan-distrital-de-gestion-del-riesgo/', '', '', true, '[]', 'excel:hoja-1', 28, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (29, 'Plan Integral de Seguridad y Convivencia Ciudadana', 'Plan', 'Bienestar Basado en la Interculturalidad', '2024', '2027', 'En Ejecución - Informe', 'https://drive.google.com/file/d/1h4MXMYd82gsuBPVdSM4x8aUbZ1oOlb1y/view?usp=drive_link', 'https://www.cali.gov.co/seguridad/publicaciones/177212/plan-integral-de-seguridad-convivencia-ciudadana-y-justicia-pisccj/', '', '', true, '[]', 'excel:hoja-1', 29, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (30, 'Politica Publica de Salud Mental', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2021', '2031', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1B5rL41zgByy9azSOH1NSjPHB8a8l0VZi/view?usp=drive_link', 'https://www.cali.gov.co/salud/publicaciones/172620/politica-distrital-de-salud-mental-convivencia-social-y-abordaje-del-consumo-de-sustancias-psicoactivas/', '', '', true, '[]', 'excel:hoja-1', 30, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (31, 'Política de Participación Social en Salud -PPSS-', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2024', '2027', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1j2L1OwS7vXWCyabY5vlyDyK0dPeU8q9i/view?usp=drive_link', 'https://www.cali.gov.co/salud/publicaciones/167323/politica-de-participacion-social-en-salud-ppss/', '', '', true, '[]', 'excel:hoja-1', 31, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (32, 'Plan de Ordenamiento y Manejo de la Cuenca Hidrografica', 'Plan', 'Territorio Adaptativo e Inteligente', '2022', '2036', 'En Ejecución', 'https://drive.google.com/file/d/1tX7F2JJkZkjchqlRVuG3O5IE30UCIsV9/view?usp=drive_link', 'https://www.cali.gov.co/gestiondelriesgo/publicaciones/182651/plan-de-ordenacion-y-manejo-de-la-cuenca-hidrografica/', '', '', true, '[]', 'excel:hoja-1', 32, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (33, 'Plan Especial de Salvaguardia Salsa', 'Plan', 'Bienestar Basado en la Interculturalidad', '2022', '2027', 'En Ejecución', 'https://drive.google.com/file/d/1Oguq9aJiX1CAmnuYdvEWlLFLnj5FDgR0/view?usp=drive_link', 'https://www.mincultura.gov.co/direcciones/patrimonio-y-memoria/Documents/plan-especial-de-salvaguardia-complejo-salsa-calena-2022.pdf', '', '', true, '[]', 'excel:hoja-1', 33, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (34, 'Plan de Ordenamiento del Recurso Hidrico PORH Cali y Aguacatal', 'Plan de Ordenamiento', 'Territorio Adaptativo e Inteligente', '2024', '2043', 'En Ejecución - Mesa', 'https://drive.google.com/file/d/1tX7F2JJkZkjchqlRVuG3O5IE30UCIsV9/view?usp=drive_link', 'https://www.cvc.gov.co/documentos/planes-y-programas/planes/planes-de-ordenamiento-del-recurso-hidrico-porh/porh-cali-y', '', '', true, '[]', 'excel:hoja-1', 34, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (35, 'Politica Publica Mejoramiento Integral Mi Habitat', 'Política Pública', 'Territorio Adaptativo e Inteligente', '2018', '2030', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/19DcZnG6ysQUeAVoMlkkCePYz93YXb0YH/view?usp=drive_link', 'https://www.cali.gov.co/vivienda/publicaciones/172367/programa-mihabitat-politica-publica-de-mejoramiento-integral-del-habitat/', '', '', true, '[]', 'excel:hoja-1', 35, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (36, 'Plan Especial De Manejo Y Protecion De Cali', 'Plan', 'Territorio Adaptativo e Inteligente', '2018', 'Permanente', 'En Ejecución - Observatorio', 'https://drive.google.com/file/d/1Kwax6wizX27RPijAp4UEXfNGtpSYXsp8/view?usp=drive_link', 'https://www.cali.gov.co/planeacion/publicaciones/187901/pemp-plan-especial-de-manejo-y-proteccion/', '', '', true, '[]', 'excel:hoja-1', 36, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (37, 'Politica Pública Plan Indicativo- Atencion a la Discapacidad', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2025', '2025', 'En Ejecución', 'https://drive.google.com/file/d/1wk7FhUX9Qr_m198vnOKI6hTLrOqlEaIl/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/172657/politica-publica-de-atencion-a-la-discapacidad/', '', '', true, '[]', 'excel:hoja-1', 37, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (38, 'Plan decenal de Cultura', 'Plan', 'Bienestar Basado en la Interculturalidad', '2018', '2028', 'En Actualización - Observatorio', 'https://drive.google.com/file/d/1VncyVwVP6vsFQDm6pzPeuborQq_-JbIh/view?usp=drive_link', 'https://www.cali.gov.co/cultura/publicaciones/145592/plan-decenal-de-cultura-de-santiago-de-cali/', '', '', true, '[]', 'excel:hoja-1', 38, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (39, 'Política Pública De Transición Energética Justa Y Comunidades Energética', 'Política Pública', 'Territorio Adaptativo e Inteligente', '2024', '2034', 'En Actualización - Observatorio', 'https://drive.google.com/file/d/1aiaEOaENiFlacelkWktW8OI3TCvhtbfz/view?usp=drive_link', 'https://www.concejodecali.gov.co/publicaciones/60984/trazabilidad-proyectos-de-acuerdo-2024/', '', '', true, '[]', 'excel:hoja-1', 39, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (40, 'Plan Cambio Climatico', 'Plan', 'Territorio Adaptativo e Inteligente', '2020', '2040', 'En Actualización - Observatorio', 'https://drive.google.com/file/d/1xEjgIyfWxfwvpQfZl5liGQ9YWv2jLdfB/view?usp=drive_link', 'https://www.cali.gov.co/documentos/3047/cambio-climatico/', '', '', true, '[]', 'excel:hoja-1', 40, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (41, 'Politica Publica de Educacion Ambiental', 'Política Pública', 'Territorio Adaptativo e Inteligente', '2017', '2036', 'En Actualización', 'https://drive.google.com/file/d/1nLpHW3oi800ssbTdSyfSO3S5GcrnBI1V/view?usp=drive_link', 'https://www.cali.gov.co/aplicaciones/dagma/descargas/politica-publica-educacion-ambiental.pdf', '', '', true, '[]', 'excel:hoja-1', 41, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (42, 'Politica Publica Interespecie', 'Política Pública', 'Territorio Adaptativo e Inteligente', '2025', '2025', 'En Actualización', 'https://drive.google.com/file/d/1yJqkOdkrKbq2v9pIml_ebSDfL6Rn2TEw/view?usp=drive_link', 'https://www.cali.gov.co/pazycultura/publicaciones/192654/historico-intervenciones-cali-con-sentido/', '', '', true, '[]', 'excel:hoja-1', 42, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (43, 'Plan Indicativo Decenal Discapacidad', 'Plan', 'Bienestar Basado en la Interculturalidad', '2012', '2022', 'En Actualización', 'https://drive.google.com/file/d/1wk7FhUX9Qr_m198vnOKI6hTLrOqlEaIl/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/162469/conozca-el-marco-normativo-ley-que-rige-el-programa-discapacidad/', '', '', true, '[]', 'excel:hoja-1', 43, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (44, 'Politica Publica Discapacidad', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2025', '2025', 'En Actualización - Observatorio', 'https://drive.google.com/file/d/1N-dH21-sIgP2XEH2o0Zi7jxPRz19pW-R/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/162469/conozca-el-marco-normativo-ley-que-rige-el-programa-discapacidad/', '', '', true, '[]', 'excel:hoja-1', 44, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (45, 'Politica Publica Bilinguismo', 'Política Pública', 'Competitividad Sostenible', '2025', '2025', 'En Actualización', 'https://drive.google.com/file/d/1NXDoVITm37Nv6GCOvDpBgIrhL1PDmg_z/view?usp=drive_link', 'https://www.ccc.org.co/inc/uploads/2022/09/GO-Cali.pdf', '', '', true, '[]', 'excel:hoja-1', 45, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (46, 'Plan Maestro De Servicios Publicos', 'Plan Maestro', 'Territorio Adaptativo e Inteligente', '2025', '2025', 'En Actualización', 'https://drive.google.com/file/d/1kJ0uQIIkInYtFu3rkOKvBKnmo0lPom5A/view?usp=drive_link', '', '', '', false, '["El campo enlace web es obligatorio."]', 'excel:hoja-1', 46, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (47, 'Plan Maestro De Vivienda', 'Plan Maestro', 'Territorio Adaptativo e Inteligente', '2025', '2025', 'En Actualización', 'https://www.cali.gov.co/documentos/6959/politica-publica-de-ctei/', '', '', '', false, '["El campo enlace web es obligatorio."]', 'excel:hoja-1', 47, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (48, 'Plan Maestro Cali Sostenible', 'Plan Maestro', 'Territorio Adaptativo e Inteligente', '2025', '2050', 'En Actualización', 'https://drive.google.com/file/d/1KbDpPU-qGKRia4GeZlppccPsCxws-8rF/view?usp=drive_link', 'https://www.cali.gov.co/dagma/publicaciones/186489/plan-maestro-cali-sostenible/', '', '', true, '[]', 'excel:hoja-1', 48, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (49, 'Plan de Ordenamiento Territorial', 'Instrumentos Macro', 'Transversal', '2014', '2038', 'En Actualización - Expediente Municipal', 'https://drive.google.com/drive/folders/1U2LMUJ-THZZe6VfmDiv1pEB7_SPNl1bC?usp=drive_link', 'https://www.cali.gov.co/planeacion/publicaciones/187380/revision-y-ajuste-del-plan-de-ordenamiento-territorial/?genPagdoc10013=4&genPagdoc10012=2&genPagdoc10014=1', '', '', true, '[]', 'excel:hoja-1', 49, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (50, 'Politica-publica-para-la-regulacion-y-organizacion-del-espacio-publico/', 'Política Pública', 'Competitividad Sostenible', '2017', '2025', 'En Actualización', 'https://drive.google.com/file/d/11RaoDyyOSrViWAJ_hoYUJYRsBz4eL_11/view?usp=drive_link', 'https://www.cali.gov.co/seguridad/publicaciones/135279/politica-publica-para-la-regulacion-y-organizacion-del-espacio-publico/', '', '', true, '[]', 'excel:hoja-1', 50, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (51, 'Marco Fiscal de Mediano Plazo', 'Instrumentos Macro', 'Transversal', '2026', '2036', 'En Actualización', 'https://drive.google.com/file/d/1g_aWhIdXQPDk5sZ_YXw8vsBPqwpWsVFz/view?usp=drive_link', 'https://www.cali.gov.co/documentos/1200/marco-fiscal-de-mediano-plazo/', '', '', true, '[]', 'excel:hoja-1', 51, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (52, 'Plan Silvicultura- Estatuto de Silvicultura', 'Plan', 'Territorio Adaptativo e Inteligente', '2022', '2034', 'En Actualización - GAMAU', 'https://drive.google.com/file/d/12KKExkGQS_qHerFtG7Kbaj6qeHHOISxL/view?usp=drive_link', 'https://drive.google.com/file/d/12KKExkGQS_qHerFtG7Kbaj6qeHHOISxL/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 52, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (53, 'Politica Pública Indigena', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2025', '2025', 'En Actualización', 'https://drive.google.com/file/d/1-RrD2REJJPA1EJ9kv2cEc5UgOT3g7qC2/view?usp=drive_link', 'https://drive.google.com/file/d/12KKExkGQS_qHerFtG7Kbaj6qeHHOISxL/view?usp=drive_link', '', '', true, '[]', 'excel:hoja-1', 53, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (54, 'Catedra Ambiental', 'Plan', 'Territorio Adaptativo e Inteligente', '2025', 'Permanente', 'En Actualización', 'https://drive.google.com/file/d/1oRN8dqaAwe0FBdOkupbx2O0YfMaK5Jnm/view?usp=drive_link', 'https://www.concejodecali.gov.co/publicaciones/61222/cali-contara-con-catedra-ambiental-en-instituciones-educativas-oficiales/', '', '', true, '[]', 'excel:hoja-1', 54, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (55, 'Politica Pública de Primera Infancia y Adolescencia', 'Política Pública', 'Bienestar Basado en la Interculturalidad', '2015', '2024', 'Finalizada - Observatorio', 'https://drive.google.com/file/d/1nn9027W8DTtuOXr9z8mgvPkQBuHFPNSf/view?usp=drive_link', 'https://www.cali.gov.co/bienestar/publicaciones/184995/actualizacion-de-la-politica-publica-de-primera-infancia-en-cali-un-legado-social-que-se-construye-en-la-administracion-del-alcalde-eder/', '', '', true, '[]', 'excel:hoja-1', 55, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+INSERT INTO public.instrumentos_planeacion (id, nombre, tipo, eje, fecha_inicio, fecha_fin, estado, link, enlace_web, documento_url, observatorio, visible, validacion_errores, origen, source_row, fecha_creacion, fecha_actualizacion) VALUES (56, 'Política Pública de Ciencia y Tecnología', 'Política Pública', 'Competitividad Sostenible', '2024', '2034', 'En Ejecución', 'https://drive.google.com/file/d/1SVG0TxyZeeW_MI3wpmlBltTQwUsjXmIl/view?usp=drive_link', 'https://www.cali.gov.co/documentos/6959/politica-publica-de-ctei/', '', '', true, '[]', 'excel:hoja-1', 56, '2026-06-05 19:09:53.59517+00', '2026-06-05 19:09:53.59517+00');
+
+
+--
+-- Name: admin_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.admin_users_id_seq', 2, true);
+
+
+--
+-- Name: instrumentos_planeacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.instrumentos_planeacion_id_seq', 56, true);
+
+
+--
+-- Name: admin_users admin_users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_users
+    ADD CONSTRAINT admin_users_email_key UNIQUE (email);
+
+
+--
+-- Name: admin_users admin_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_users
+    ADD CONSTRAINT admin_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: instrumentos_planeacion instrumentos_planeacion_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instrumentos_planeacion
+    ADD CONSTRAINT instrumentos_planeacion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: instrumentos_fecha_actualizacion_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX instrumentos_fecha_actualizacion_idx ON public.instrumentos_planeacion USING btree (fecha_actualizacion DESC);
+
+
+--
+-- Name: instrumentos_visible_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX instrumentos_visible_idx ON public.instrumentos_planeacion USING btree (visible);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+

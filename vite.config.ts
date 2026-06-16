@@ -9,10 +9,14 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(), '');
 
   return {
-    base: '/Cali500/', // Requerido para GitHub Pages
+    base: env.VITE_BASE_PATH || '/',
     server: {
       port: 3000,
       host: '0.0.0.0',
+      proxy: {
+        '/api': 'http://localhost:8080',
+        '/uploads': 'http://localhost:8080',
+      },
     },
     plugins: [react()],
     define: {

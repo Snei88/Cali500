@@ -1,133 +1,80 @@
-
 import React, { useState } from 'react';
-import { X, Lock, User, LogIn, AlertCircle } from 'lucide-react';
-import { CALI } from '@/utils/constants';
+import { AlertCircle, Lock, LogIn, Mail, X } from 'lucide-react';
+import { signInAdmin } from '@/services/api';
 
 interface LoginModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onLogin: (success: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onLogin: (success: boolean) => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setIsLoading(true);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setIsLoading(true);
+    const result = await signInAdmin(email, password);
+    setIsLoading(false);
+    if (result.success) {
+      onLogin(true);
+      setEmail('');
+      setPassword('');
+    } else {
+      setError(result.error ?? 'No se pudo iniciar sesion.');
+    }
+  };
 
-        // Simulamos un pequeño delay de red
-        setTimeout(() => {
-            // Credenciales Hardcoded (Para efectos del prototipo)
-            // Usuario: Admin
-            // Pass: 12345
-            if (username === 'Admin' && password === '12345') {
-                onLogin(true);
-                setUsername('');
-                setPassword('');
-            } else {
-                setError('Credenciales incorrectas. Intente nuevamente.');
-                setIsLoading(false);
-            }
-        }, 800);
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in"
-                onClick={onClose}
-            ></div>
-
-            {/* Modal */}
-            <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                {/* Header */}
-                <div className="h-32 relative flex items-center justify-center" style={{ backgroundColor: CALI.MORADO }}>
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-[#1E1B4B] opacity-50"></div>
-                    <div className="relative z-10 p-4 bg-white/10 rounded-full backdrop-blur-md border border-white/20 shadow-lg">
-                        <Lock className="h-8 w-8 text-white" />
-                    </div>
-                    <button 
-                        onClick={onClose}
-                        className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-
-                {/* Form */}
-                <div className="p-8">
-                    <div className="text-center mb-6">
-                        <h2 className="text-xl font-bold text-slate-800">Acceso Administrativo</h2>
-                        <p className="text-xs text-slate-500 mt-1">Ingrese sus credenciales para gestionar el ecosistema.</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-600 ml-1">Usuario</label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <input 
-                                    type="text" 
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
-                                    placeholder="Nombre de usuario"
-                                    autoFocus
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-600 ml-1">Contraseña</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <input 
-                                    type="password" 
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 text-xs rounded-lg border border-red-100 animate-in slide-in-from-top-1">
-                                <AlertCircle className="h-4 w-4 shrink-0" />
-                                {error}
-                            </div>
-                        )}
-
-                        <button 
-                            type="submit" 
-                            disabled={isLoading}
-                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
-                        >
-                            {isLoading ? (
-                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            ) : (
-                                <>
-                                    <LogIn className="h-4 w-4" /> Iniciar Sesión
-                                </>
-                            )}
-                        </button>
-                    </form>
-                    
-                    <div className="mt-6 text-center">
-                        <p className="text-[10px] text-slate-400">
-                            Acceso restringido únicamente para personal de Planeación Distrital.
-                        </p>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="bg-[#0B1F3A] p-6 text-white">
+          <button onClick={onClose} className="absolute right-4 top-4 rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label="Cerrar">
+            <X className="h-5 w-5" />
+          </button>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h2 className="mt-5 text-2xl font-black">Acceso administrativo</h2>
+          <p className="mt-2 text-sm text-slate-300">Autenticación conectada a Supabase Auth.</p>
         </div>
-    );
+
+        <form onSubmit={handleSubmit} className="space-y-4 p-6">
+          <label className="space-y-1.5">
+            <span className="text-sm font-bold text-slate-700">Correo institucional</span>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10" autoFocus />
+            </div>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-bold text-slate-700">Contraseña</span>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input type="password" required value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10" />
+            </div>
+          </label>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
+
+          <button disabled={isLoading} type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0B1F3A] px-5 py-3 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-60">
+            <LogIn className="h-4 w-4" />
+            {isLoading ? 'Validando...' : 'Iniciar sesión'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 };

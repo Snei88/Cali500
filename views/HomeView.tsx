@@ -1,380 +1,399 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-    ChevronRight, ChevronLeft, ArrowRight, 
-    Users, Activity, Mail, MessageCircle, BarChart3, ExternalLink,
-    Library, Map as MapIcon, Zap, Send, User, AtSign, Smartphone, Check,
-    Search, Database
-} from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { ArrowRight, BarChart3, Bird, Download, Ear, History, Landmark, Leaf, Network, Pause, Play, Target, Telescope, UsersRound, Waves } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { Stats } from '@/types';
 
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
 interface HomeViewProps {
-    stats: Stats;
-    onAction: (view: 'analitica' | 'ecosistema' | 'mapa' | 'datos') => void;
+  stats: Stats;
+  onAction: (view: 'analitica' | 'documentos' | 'datos') => void;
 }
 
-const HERO_SLIDES = [
-    {
-        tag: "VISIÓN DE CIUDAD 2050",
-        title: "Cali, referente internacional en sostenibilidad",
-        description: "Construimos una visión de largo plazo que cuida la biodiversidad y la interculturalidad como pilares del desarrollo territorial.",
-        image: "components/assets/vision_de_ciudad_2050.jpg",
-        cta1: "Conocer la visión",
-        cta2: "Hoja de ruta 2050",
-        target1: 'ecosistema',
-        target2: 'analitica'
-    },
-    {
-        tag: "TERRITORIO ADAPTATIVO",
-        title: "Cuidar la biodiversidad es planificar el futuro",
-        description: "Gestionamos el territorio reconociendo sus ecosistemas y saberes comunitarios para una Cali resiliente.",
-        image: "components/assets/territorio_adaptativo.jpg",
-        cta1: "Mapa de instrumentos",
-        cta2: "Ver análisis territorial",
-        target1: 'mapa',
-        target2: 'analitica'
-    },
-    {
-        tag: "BIENESTAR E INTERCULTURALIDAD",
-        title: "La ciudad que soñamos la construimos juntos",
-        description: "Una visión construida desde la participación ciudadana, donde el bienestar y la equidad están en el centro.",
-        image: "components/assets/bienestar.jpg",
-        cta1: "Ver instrumentos",
-        cta2: "Participación ciudadana",
-        target1: 'ecosistema',
-        target2: 'ecosistema'
-    },
-    {
-        tag: "DATOS PARA DECIDIR",
-        title: "Datos para decidir, visión para transformar",
-        description: "Integramos información estratégica para orientar políticas públicas alineadas con la visión Cali 500+.",
-        image: "components/assets/datos_para_decidir.jpg",
-        cta1: "Ir al dashboard",
-        cta2: "Explorar datos",
-        target1: 'analitica',
-        target2: 'datos'
-    }
+const axisIcons = [
+  { src: 'assets/ejes/territorio.png', alt: 'Territorio inteligente y adaptativo' },
+  { src: 'assets/ejes/bienestar.png', alt: 'Bienestar basado en la interculturalidad' },
+  { src: 'assets/ejes/competitividad.png', alt: 'Competitividad sostenible' }
 ];
 
-export const HomeView: React.FC<HomeViewProps> = ({ stats, onAction }) => {
-    const [currentSlide, setCurrentSlide] = useState(0);
-    const [formSent, setFormSent] = useState(false);
-    const [isSending, setIsSending] = useState(false);
-    const slideContainerRef = useRef<HTMLDivElement>(null);
+export const HomeView: React.FC<HomeViewProps> = ({ onAction }) => {
+  const scope = useRef<HTMLDivElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const [isHeroVideoPlaying, setIsHeroVideoPlaying] = useState(true);
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-        }, 8000);
-        return () => clearInterval(timer);
-    }, []);
+  const toggleHeroVideo = () => {
+    const video = heroVideoRef.current;
+    if (!video) return;
 
-    const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+    if (video.paused) {
+      video.play();
+      setIsHeroVideoPlaying(true);
+    } else {
+      video.pause();
+      setIsHeroVideoPlaying(false);
+    }
+  };
 
-    const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSending(true);
-        setTimeout(() => {
-            setIsSending(false);
-            setFormSent(true);
-            setTimeout(() => setFormSent(false), 5000);
-        }, 1500);
-    };
+  useGSAP(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    return (
-        <div className="bg-white overflow-x-hidden font-['Plus_Jakarta_Sans']">
-            
-            {/* 1. CARRUSEL HERO */}
-            <section className="relative h-[400px] md:h-[500px] bg-[#0F172A] overflow-hidden group">
-                <div 
-                    ref={slideContainerRef}
-                    className="flex h-full transition-transform duration-1000 ease-[cubic-bezier(0.85,0,0.15,1)]"
-                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+    gsap.from('.hero-copy > *', {
+      opacity: 0,
+      y: 24,
+      duration: 0.8,
+      stagger: 0.08,
+      ease: 'power3.out'
+    });
+
+    gsap.utils.toArray<HTMLElement>('.reveal').forEach((element) => {
+      gsap.from(element, {
+        opacity: 0,
+        y: 28,
+        duration: 0.75,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: element,
+          start: 'top 82%',
+          once: true
+        }
+      });
+    });
+  }, { scope });
+
+  return (
+    <div ref={scope} className="overflow-hidden bg-white">
+      <section className="relative min-h-[760px] overflow-hidden bg-[#A7DFFF] text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.5),transparent_30%),linear-gradient(125deg,rgba(54,169,255,0.92),rgba(126,209,255,0.8)_48%,rgba(198,235,255,0.9))]" />
+        <img
+          src="assets/fondo.png"
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-95"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#2A8FD8]/70 to-transparent" />
+        <div className="relative z-10 mx-auto grid min-h-[760px] max-w-7xl items-center gap-10 px-6 pb-20 pt-44 sm:pt-36 lg:grid-cols-[0.9fr_1.1fr] lg:pt-36">
+          <div className="hero-copy max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/20 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-white shadow-sm backdrop-blur">
+              <Landmark className="h-4 w-4" />
+              Gestión pública y transparencia
+            </div>
+            <h1 className="mt-6 max-w-5xl text-white drop-shadow-[0_8px_28px_rgba(24,102,166,0.38)]">
+              <img src="assets/logo-ilera.png" alt="Cali 500+" className="mr-4 inline h-14 w-auto max-w-[180px] align-middle sm:h-16 sm:max-w-[220px] lg:h-20 lg:max-w-[260px]" />
+              <span className="font-anton align-middle text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">una visión de ciudad construida desde el territorio.</span>
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg font-bold leading-8 text-white drop-shadow-[0_4px_18px_rgba(24,102,166,0.48)]">
+              En 2050, Cali será referente internacional en sostenibilidad, a partir del cuidado de la biodiversidad y la interculturalidad como pilares del desarrollo territorial, social y económico.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a href="https://bit.ly/VisionCali500" target="_blank" rel="noreferrer" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F46217] px-6 text-sm font-black text-white shadow-xl shadow-sky-950/20 transition hover:bg-white hover:text-[#1B78BE]">
+                Conocer la visión
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <button onClick={() => onAction('analitica')} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20">
+                Ver dashboard
+                <BarChart3 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="reveal mt-6 lg:mt-14">
+            <div className="relative mx-auto max-w-2xl rounded-[34px] border border-white/35 bg-white/20 p-3 shadow-[0_30px_80px_rgba(24,102,166,0.3)] backdrop-blur">
+              <div className="relative aspect-video overflow-hidden rounded-[26px] bg-[#145A8C]">
+                <video
+                  ref={heroVideoRef}
+                  className="absolute left-1/2 top-1/2 h-[177.78%] w-[56.25%] -translate-x-1/2 -translate-y-1/2 rotate-90 object-cover"
+                  src="assets/video.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="Video principal de Cali 500+"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
+                <button
+                  type="button"
+                  onClick={toggleHeroVideo}
+                  className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/50 bg-white/25 text-white shadow-[0_18px_45px_rgba(0,0,0,0.28)] backdrop-blur-2xl transition hover:bg-white/35 focus-visible:outline-white"
+                  aria-label={isHeroVideoPlaying ? 'Pausar video' : 'Reproducir video'}
                 >
-                    {HERO_SLIDES.map((slide, index) => (
-                        <div key={index} className="w-full h-full shrink-0 relative overflow-hidden">
-                            <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0F172A] via-[#0F172A]/50 to-transparent"></div>
-                            <div 
-                                className="absolute inset-0 bg-cover bg-center transition-transform duration-[30s] ease-linear scale-110" 
-                                style={{ backgroundImage: `url('${slide.image}')` }}
-                            ></div>
-                            
-                            <div className="container mx-auto px-6 relative z-20 h-full flex items-center max-w-6xl">
-                                <div className={`max-w-2xl transition-all duration-1000 delay-300 ${index === currentSlide ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="h-1 w-8 bg-indigo-500 rounded-full"></div>
-                                        <span className="text-white text-xs font-black uppercase tracking-[0.4em] opacity-80">{slide.tag}</span>
-                                    </div>
-                                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tighter uppercase">
-                                        {slide.title}
-                                    </h1>
-                                    <p className="text-slate-300 text-sm md:text-lg mb-8 leading-relaxed font-medium max-w-lg">
-                                        {slide.description}
-                                    </p>
-                                    <div className="flex flex-wrap gap-4">
-                                        <button 
-                                            onClick={() => onAction(slide.target1 as any)}
-                                            className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2 shadow-xl shadow-indigo-600/30 active:scale-95"
-                                        >
-                                            {slide.cta1} <ArrowRight className="h-4 w-4" />
-                                        </button>
-                                        <button 
-                                            onClick={() => onAction(slide.target2 as any)}
-                                            className="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-full font-bold text-xs uppercase tracking-widest backdrop-blur-md transition-all active:scale-95"
-                                        >
-                                            {slide.cta2}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                  {isHeroVideoPlaying ? <Pause className="h-8 w-8" fill="currentColor" /> : <Play className="ml-1 h-9 w-9" fill="currentColor" />}
+                </button>
+                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/30 bg-black/25 px-4 py-2 text-xs font-bold text-white backdrop-blur-xl">
+                  <span className="h-2 w-2 rounded-full bg-[#A7DFFF]" />
+                  Cali 500+
                 </div>
-
-                <button onClick={prevSlide} className="absolute left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-black/20 hover:bg-indigo-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all opacity-0 group-hover:opacity-100"><ChevronLeft /></button>
-                <button onClick={nextSlide} className="absolute right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-black/20 hover:bg-indigo-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all opacity-0 group-hover:opacity-100"><ChevronRight /></button>
-            </section>
-
-            {/* 2. SISTEMA MACRO DE PLANEACIÓN EFICIENTE */}
-            <section className="py-24 bg-white relative overflow-hidden">
-                <div className="container mx-auto px-6 max-w-6xl">
-                    <div className="text-center max-w-3xl mx-auto mb-16">
-                        <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Estrategia Territorial</span>
-                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-6 uppercase">Sistema Macro de Planeación Eficiente</h2>
-                        <div className="h-1.5 w-16 bg-indigo-600 mx-auto rounded-full mb-8"></div>
-                        <p className="text-base text-slate-500 leading-relaxed font-medium">
-                            En esta herramienta encontrarás el seguimiento y análisis de todos los documentos de planeación de Cali de mediano y de largo plazo, y su incidencia en la toma de decisiones en el presente.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Analítica */}
-                        <div onClick={() => onAction('analitica')} className="group p-10 bg-slate-50 border border-slate-100 rounded-[3rem] hover:bg-indigo-600 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-indigo-600/20">
-                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform">
-                                <BarChart3 className="h-8 w-8 text-indigo-600" />
-                            </div>
-                            <h3 className="text-xl font-black text-slate-900 group-hover:text-white mb-4 transition-colors uppercase tracking-tight">Analítica</h3>
-                            <p className="text-sm text-slate-500 group-hover:text-indigo-100 leading-relaxed transition-colors">
-                                Análisis de los instrumentos de planeación de mediano y de largo plazo.
-                            </p>
-                        </div>
-
-                        {/* Seguimiento y Biblioteca */}
-                        <div onClick={() => onAction('ecosistema')} className="group p-10 bg-slate-50 border border-slate-100 rounded-[3rem] hover:bg-emerald-600 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-emerald-600/20">
-                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform">
-                                <Library className="h-8 w-8 text-emerald-600" />
-                            </div>
-                            <h3 className="text-xl font-black text-slate-900 group-hover:text-white mb-4 transition-colors uppercase tracking-tight">Seguimiento y Biblioteca</h3>
-                            <p className="text-sm text-slate-500 group-hover:text-emerald-50 leading-relaxed transition-colors">
-                                Seguimiento al cumplimiento de los instrumentos de planeación y acceso al documento oficial y observatorios.
-                            </p>
-                        </div>
-
-                        {/* Mapa Circular */}
-                        <div onClick={() => onAction('mapa')} className="group p-10 bg-slate-50 border border-slate-100 rounded-[3rem] hover:bg-amber-500 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-amber-500/20">
-                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform">
-                                <MapIcon className="h-8 w-8 text-amber-500" />
-                            </div>
-                            <h3 className="text-xl font-black text-slate-900 group-hover:text-white mb-4 transition-colors uppercase tracking-tight">Mapa Circular</h3>
-                            <p className="text-sm text-slate-500 group-hover:text-amber-50 leading-relaxed transition-colors">
-                                Distribución temporal de los instrumentos en el territorio.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 3. ESTADO DE AVANCE (KPIs DINÁMICOS) */}
-            <section className="py-20 bg-slate-50 border-y border-slate-100">
-                <div className="container mx-auto px-6 max-w-6xl">
-                    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 text-center md:text-left">
-                        <div>
-                            <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 block">Cifras Reales</span>
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Estado de Avance</h2>
-                        </div>
-                        <button onClick={() => onAction('analitica')} className="bg-slate-900 text-white px-8 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95 flex items-center gap-2">
-                            Ver Dashboard de Datos <ChevronRight className="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                         <div className="p-10 bg-white rounded-[2.5rem] border border-slate-200 text-center hover:shadow-2xl transition-all group">
-                            <Activity className="h-10 w-10 mx-auto text-indigo-600 mb-6 group-hover:scale-110 transition-transform" />
-                            <span className="block text-6xl font-black text-slate-900 tracking-tighter mb-2">{stats.cobertura}%</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Cobertura de Seguimiento</span>
-                        </div>
-                        <div className="p-10 bg-indigo-600 rounded-[2.5rem] text-center text-white hover:shadow-2xl transition-all shadow-xl shadow-indigo-600/20">
-                            <Zap className="h-10 w-10 mx-auto text-white/80 mb-6" />
-                            <span className="block text-6xl font-black tracking-tighter mb-2">{stats.estadosMap['En Ejecución']}</span>
-                            <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-[0.2em]">Instrumentos en Ejecución Activa</span>
-                        </div>
-                        <div className="p-10 bg-white rounded-[2.5rem] border border-slate-200 text-center hover:shadow-2xl transition-all group">
-                            <Library className="h-10 w-10 mx-auto text-amber-500 mb-6 group-hover:scale-110 transition-transform" />
-                            <span className="block text-6xl font-black text-slate-900 tracking-tighter mb-2">{stats.total}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Biblioteca Estratégica</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 4. QUIÉNES SOMOS */}
-            <section id="quienes-somos" className="py-24 bg-[#0F172A] text-white relative scroll-mt-20 overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-indigo-500/5 blur-[120px] pointer-events-none"></div>
-                <div className="container mx-auto px-6 max-w-6xl relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        <div className="space-y-10">
-                            <div>
-                                <span className="text-cyan-400 text-[10px] font-black uppercase tracking-[0.5em] mb-4 block">Nuestra Misión y Visión</span>
-                                <h2 className="text-4xl md:text-5xl font-black leading-[1.1] mb-6 tracking-tighter uppercase">
-                                    Planeando <br/><span className="text-slate-500 font-light italic lowercase">el futuro de Cali</span>
-                                </h2>
-                                <p className="text-slate-400 text-base leading-relaxed max-w-md font-medium">
-                                    Cali 500+ es el marco estratégico que orienta el desarrollo integral de Santiago de Cali hacia su quinto centenario.
-                                </p>
-                            </div>
-
-                            <div className="space-y-8">
-                                <div className="flex gap-6 group">
-                                    <div className="w-14 h-14 shrink-0 rounded-2xl border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-black text-xl group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xl">01</div>
-                                    <div className="space-y-1">
-                                        <h4 className="font-black text-xs uppercase tracking-widest text-white">Planeación con visión de futuro</h4>
-                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Orientamos las decisiones del territorio mediante una visión compartida, que trasciende los periodos de gobierno.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-6 group">
-                                    <div className="w-14 h-14 shrink-0 rounded-2xl border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-black text-xl group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-xl">02</div>
-                                    <div className="space-y-1">
-                                        <h4 className="font-black text-xs uppercase tracking-widest text-white">Gobernanza y corresponsabilidad</h4>
-                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Construimos esta visión con la participación activa de ciudadanía, academia y sector privado.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-6 group">
-                                    <div className="w-14 h-14 shrink-0 rounded-2xl border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xl">03</div>
-                                    <div className="space-y-1">
-                                        <h4 className="font-black text-xs uppercase tracking-widest text-white">Datos para planificar mejor</h4>
-                                        <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Integramos información e indicadores territoriales para hacer seguimiento a la visión.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="relative">
-                            <div className="absolute -inset-4 bg-indigo-500/10 blur-[80px] pointer-events-none rounded-full"></div>
-                            <div className="relative rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl group">
-                                <img 
-                                    src="components/assets/Vistas hermosas.jpg" 
-                                    alt="Cali Ciudad" 
-                                    className="w-full aspect-[4/5] object-cover opacity-90 transition-transform duration-[10s] group-hover:scale-110" 
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 5. FORMULARIO DE CONTACTO */}
-            <section id="contacto" className="py-24 bg-slate-50 relative scroll-mt-20">
-                <div className="container mx-auto px-6 max-w-5xl">
-                    <div className="text-center mb-16">
-                        <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-3 block">¿Tienes dudas?</span>
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase mb-4">Contáctanos</h2>
-                        <div className="h-1 w-12 bg-indigo-600 mx-auto rounded-full"></div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-                        <div className="lg:col-span-2 space-y-8">
-                            <div className="flex gap-4 cursor-pointer group" onClick={() => window.open("https://wa.me/573178055480", "_blank")}>
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                    <MessageCircle className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <h4 className="font-black text-xs uppercase tracking-widest text-slate-900 mb-1">WhatsApp Oficial</h4>
-                                    <p className="text-sm text-slate-500">+57 317 805 5480</p>
-                                    <span className="text-indigo-600 text-xs font-bold hover:underline mt-1 inline-block">Hablar ahora</span>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-                                    <Mail className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <h4 className="font-black text-xs uppercase tracking-widest text-slate-900 mb-1">Correo Electrónico</h4>
-                                    <p className="text-sm text-slate-500">gerenciacali500@gmail.com</p>
-                                    <p className="text-sm text-slate-500">info@cali500.gov.co</p>
-                                </div>
-                            </div>
-                            <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-                                <h4 className="font-black text-[10px] uppercase tracking-widest text-indigo-600 mb-3">Atención Directa</h4>
-                                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                                    Si eres un organismo internacional o academia buscando datasets específicos, solicita una llave de acceso API.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="lg:col-span-3">
-                            <form className="space-y-4 bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden" onSubmit={handleFormSubmit}>
-                                {formSent ? (
-                                    <div className="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
-                                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
-                                            <Check className="h-8 w-8" />
-                                        </div>
-                                        <h3 className="text-2xl font-black text-slate-900 mb-2">¡Mensaje Enviado!</h3>
-                                        <p className="text-slate-500 text-center text-sm mb-6">Gracias por contactarnos. Nuestro equipo te responderá a la brevedad posible.</p>
-                                        <button type="button" onClick={() => setFormSent(false)} className="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline">Enviar otro mensaje</button>
-                                    </div>
-                                ) : null}
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="relative group">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                        <input 
-                                            required
-                                            type="text" 
-                                            placeholder="Nombre Completo" 
-                                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div className="relative group">
-                                        <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                        <input 
-                                            required
-                                            type="email" 
-                                            placeholder="Correo Electrónico" 
-                                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="relative group">
-                                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                    <input 
-                                        type="tel" 
-                                        placeholder="Teléfono / WhatsApp" 
-                                        className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all"
-                                    />
-                                </div>
-                                <div className="relative group">
-                                    <textarea 
-                                        required
-                                        placeholder="¿En qué podemos ayudarte?" 
-                                        rows={4}
-                                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-3xl text-sm focus:border-indigo-400 focus:bg-white outline-none transition-all resize-none"
-                                    ></textarea>
-                                </div>
-                                <button 
-                                    disabled={isSending}
-                                    type="submit"
-                                    className="w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isSending ? "Enviando..." : "Enviar Mensaje"} <Send className="h-4 w-4" />
-                                </button>
-                                <p className="text-[9px] text-slate-400 text-center font-medium">Al enviar este formulario aceptas nuestra política de tratamiento de datos personales.</p>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </section>
+              </div>
+              <div className="absolute -bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-3">
+                {axisIcons.map((icon) => (
+                  <div key={icon.src} className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-xl">
+                    <img src={icon.src} alt={icon.alt} className="h-full w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-    );
+      </section>
+
+      <section className="reveal relative overflow-hidden bg-white py-16 font-editorial">
+        <img
+          src="assets/rey.png"
+          alt=""
+          className="pointer-events-none absolute bottom-0 right-0 z-0 w-72 translate-x-10 translate-y-4 opacity-90 sm:w-96 lg:w-[540px]"
+          aria-hidden="true"
+        />
+        <div className="relative z-10 mr-auto grid max-w-[1440px] gap-14 px-6 lg:grid-cols-[560px_minmax(0,1fr)] lg:pl-10 lg:pr-8 xl:pl-16">
+          <div className="max-w-[560px]">
+            <p className="text-xl font-extrabold uppercase tracking-[0.59em] text-[#F46217] mb-4">
+              Quiénes somos
+            </p>
+            <div className="mt-3 h-1 w-12 bg-[#F46217] mb-9" />
+            <h2 className="font-anton mt-5 text-[38px] leading-[0.94] tracking-tight text-[#24115A] sm:text-[46px] lg:text-[50px]">
+              Una visión territorial,<br />
+              no de gobierno<span className="ml-1 inline-block h-3 w-3 rounded-full bg-[#F46217] align-baseline sm:h-4 sm:w-4" aria-hidden="true" />
+            </h2>
+            <div className="mt-6 max-w-lg space-y-4 text-base leading-7 text-slate-700">
+              <p>
+                Cali 500+ nace como una apuesta de largo plazo para construir una visión compartida, técnica y participativa. Escuchar, reconocer y agradecer fue la brújula de un proceso moldeado por conversaciones con ciudadanía, academia, sector público, sector privado y organizaciones sociales.
+              </p>
+              <p>
+                La iniciativa busca que la visión no quede como una aspiración aislada, sino que se vincule a instrumentos de planificación, pol?tica p?blica, seguimiento e institucionalidad.
+              </p>
+            </div>
+
+            <div className="mt-7 flex items-center gap-5 rounded-[22px] border border-white bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)]">
+              <div className="relative h-16 w-16 shrink-0 text-[#8E44AD]">
+                <div className="absolute left-1/2 top-1 h-6 w-6 -translate-x-1/2 rounded-full border-2 border-current bg-violet-50" />
+                <div className="absolute left-2 top-5 h-5 w-5 rounded-full border-2 border-current bg-violet-50" />
+                <div className="absolute right-2 top-5 h-5 w-5 rounded-full border-2 border-current bg-violet-50" />
+                <div className="absolute bottom-1 left-1/2 h-7 w-10 -translate-x-1/2 rounded-t-full border-2 border-current bg-violet-50" />
+                <div className="absolute bottom-0 left-0 h-6 w-8 rounded-t-full border-2 border-current bg-violet-50" />
+                <div className="absolute bottom-0 right-0 h-6 w-8 rounded-t-full border-2 border-current bg-violet-50" />
+              </div>
+              <div className="h-14 w-1 shrink-0 bg-[#F46217]" />
+              <div>
+                <h3 className="font-editorial text-xl font-semibold leading-tight text-[#3A0D7B]">Construida con la ciudad, para la ciudad.</h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Un proceso colectivo que convierte ideas en acuerdos y acuerdos en acción.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:translate-x-6 xl:translate-x-12">
+            {[
+              { number: '01', icon: History, title: 'El pasado para entendernos', text: 'Reconocer aprendizajes, procesos previos y capacidades territoriales.', color: '#1E88E5', ring: 'border-[#1E88E5]/18', bg: 'bg-[#1E88E5]', bar: 'bg-[#1E88E5]' },
+              { number: '02', icon: Ear, title: 'El presente para escucharnos', text: 'Indagar por información técnica, pero también por dolores, expectativas y sentimientos ciudadanos.', color: '#7CB342', ring: 'border-[#7CB342]/20', bg: 'bg-[#7CB342]', bar: 'bg-[#7CB342]' },
+              { number: '03', icon: Telescope, title: 'El futuro para encontrarnos', text: 'Llegar a acuerdos mínimos donde distintos actores puedan actuar con corresponsabilidad.', color: '#8E44AD', ring: 'border-[#8E44AD]/20', bg: 'bg-[#8E44AD]', bar: 'bg-[#8E44AD]' },
+              { number: '04', icon: Target, title: 'Continuidad institucional', text: 'Conectar visión de largo plazo con decisiones, recursos e instrumentos de seguimiento.', color: '#EC407A', ring: 'border-[#EC407A]/20', bg: 'bg-[#EC407A]', bar: 'bg-[#EC407A]' }
+            ].map((item) => (
+              <article key={item.title} className={`group relative min-h-[198px] overflow-hidden rounded-[20px] border ${item.ring} bg-white p-5 pl-7 shadow-[0_16px_46px_rgba(15,23,42,0.1)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_62px_rgba(15,23,42,0.14)]`}>
+                <span className={`absolute left-0 top-0 h-full w-2.5 ${item.bar}`} />
+                <span className="font-anton pointer-events-none absolute right-4 top-2 text-[76px] leading-none text-slate-900/[0.045]">{item.number}</span>
+                <div className="relative z-10 h-16 w-16">
+                  <span className="absolute inset-0 rounded-full opacity-25 blur-lg" style={{ backgroundColor: item.color }} />
+                  <span className="absolute inset-1 rounded-full bg-white/70" />
+                  <div className={`relative flex h-16 w-16 items-center justify-center rounded-full ${item.bg} text-white shadow-xl ring-4 ring-white/80`}>
+                    <item.icon className="h-8 w-8" strokeWidth={2.4} />
+                    <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-white bg-white shadow-sm" style={{ boxShadow: `0 0 0 3px ${item.color}33` }} />
+                  </div>
+                </div>
+                <div className="relative z-10 mt-4">
+                  <h3 className="font-anton max-w-[12rem] text-lg leading-tight" style={{ color: item.color }}>{item.title}</h3>
+                  <div className="mt-3 h-1 w-10" style={{ backgroundColor: item.color }} />
+                  <p className="mt-4 text-sm font-semibold leading-6 text-slate-700">{item.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="quienes-somos" className="reveal relative overflow-hidden py-20">
+        <img src="assets/fondo-2.png" alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-100" aria-hidden="true" />
+        <div className="absolute inset-0 bg-white/58" />
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+          <div className="flex justify-center lg:pr-4">
+            <div className="w-full max-w-[340px] overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl">
+              <a
+                href="https://www.instagram.com/p/DYBD7dgxXCP/"
+                target="_blank"
+                rel="noreferrer"
+                className="block cursor-pointer transition hover:opacity-90"
+              >
+                <img src="assets/instagram/superior.png" alt="Encabezado publicación Instagram" className="w-full" />
+              </a>
+
+              <div className="relative aspect-[9/16] overflow-hidden bg-black">
+                <video
+                  className="h-full w-full object-cover"
+                  src="assets/video_ig.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              </div>
+
+              <a
+                href="https://www.instagram.com/p/DYBD7dgxXCP/"
+                target="_blank"
+                rel="noreferrer"
+                className="block cursor-pointer transition hover:opacity-90"
+              >
+                <img src="assets/instagram/inferior.png" alt="Pie publicación Instagram" className="w-full" />
+              </a>
+            </div>
+          </div>
+
+          <div className="justify-self-end lg:max-w-[680px]">
+            <div className="inline-block mb-6">
+              <p className="font-anton text-sm uppercase tracking-[0.08em] text-[#F52789]">
+                Potencialidades
+              </p>
+
+              <div className="mt-1 h-[2px] w-10 rounded-full bg-[#F52789]"></div>
+            </div>
+            <h2 className="font-bebas mt-4 text-4xl font-bold leading-[0.98] text-[#3B0764] sm:text-5xl lg:text-6xl">
+              Biodiversidad, interculturalidad y <span className="text-[#F52789]">cuidado</span> como punto de partida<span className="ml-1 inline-block h-3 w-3 rounded-full bg-[#F52789] align-baseline sm:h-4 sm:w-4" aria-hidden="true" />
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-slate-700">
+              La visión reconoce a Cali desde sus atributos esenciales: cultura vibrante, comunidad acogedora y entorno natural privilegiado. La biodiversidad y la interculturalidad se entienden como potencialidades centrales para proyectar un modelo de desarrollo más justo, regenerativo y sostenible.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              {[
+                { icon: Leaf, value: '71,16%', label: 'Estructura ecológica municipal del territorio distrital.', color: '#00A7C8', bg: 'bg-[#00A7C8]' },
+                { icon: Waves, value: '7 ríos', label: 'atraviesan la zona urbana de Cali.', color: '#7CB342', bg: 'bg-[#7CB342]' },
+                { icon: Bird, value: '980+', label: 'especies de aves registradas en el territorio.', color: '#F52789', bg: 'bg-[#F52789]' }
+              ].map((item) => (
+                <article key={item.value} className="relative overflow-hidden rounded-[26px] border border-white/80 bg-white/90 px-6 py-4 shadow-[0_22px_70px_rgba(15,23,42,0.12)] backdrop-blur">
+                  <span className="absolute left-5 right-5 top-0 h-1 rounded-b-full" style={{ backgroundColor: item.color }} />
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${item.bg} text-white shadow-md`}>
+                      <item.icon className="h-5 w-5" strokeWidth={2.2} />
+                    </div>
+                    <div>
+                      <strong className="font-anton block text-2xl leading-none" style={{ color: item.color }}>{item.value}</strong>
+                      <span className="mt-1 block text-[10px] font-black uppercase leading-4 tracking-[0.08em] text-slate-700">{item.label}</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="reveal relative overflow-hidden bg-[#2bffc7]">
+        <div className="grid min-h-[480px] lg:grid-cols-2">
+          <div className="relative self-stretch">
+            <img src="assets/ion/vision.png" alt="Visión Cali 2050" className="absolute inset-0 h-full w-full object-contain object-bottom" />
+          </div>
+          <div className="flex items-center py-16 pr-10 pl-10 lg:pl-12 lg:pr-16" style={{ fontFamily: 'Arial, sans-serif' }}>
+            <div>
+              <p className="text-3xl font-semibold leading-snug text-[#3A0D7B]">
+                En el año <strong className="font-bold">2050</strong>, Cali será un referente internacional en sostenibilidad, a partir del cuidado de la biodiversidad y la interculturalidad, como pilares para el desarrollo territorial, social y económico.
+              </p>
+              <p className="mt-6 text-3xl font-semibold leading-snug text-[#3A0D7B]">
+                Su planificación inteligente, garantizará un territorio adaptativo, el bienestar de sus habitantes y la competitividad sostenible en un contexto regional, nacional y global.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="reveal py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-16 lg:grid-cols-[1fr_1.4fr] lg:items-center">
+
+            {/* Left: title block */}
+            <div>
+              <span className="text-xs font-black uppercase tracking-[0.22em] text-[#F52789]">Ejes estratégicos</span>
+              <h2 className="font-anton mt-4 text-5xl leading-[0.92] text-[#3A0D7B] sm:text-6xl">
+                Tres rutas para convertir la visión en{' '}
+                <span className="text-[#F52789]">acción.</span>
+              </h2>
+              <div className="mt-6 flex gap-2">
+                <span className="h-1 w-8 rounded-full bg-[#F52789]" />
+                <span className="h-1 w-3 rounded-full bg-[#F46217]" />
+                <span className="h-1 w-3 rounded-full bg-[#00A7C8]" />
+              </div>
+              <p className="mt-6 text-sm leading-7 text-slate-600">
+                Los ejes estratégicos organizan las transformaciones necesarias para cuidar las potencialidades de Cali y pasar de los acuerdos a{' '}
+                <strong className="font-bold text-[#3A0D7B]">acciones sostenibles</strong>{' '}en el tiempo.
+              </p>
+            </div>
+
+            {/* Right: stacked cards */}
+            <div className="flex flex-col gap-5">
+              {([
+                {
+                  number: '01',
+                  img: 'assets/ejes/territorio.png',
+                  title: 'Territorio inteligente y adaptativo',
+                  text: 'Gestiona la biodiversidad como base del desarrollo urbano y rural, integra saberes comunitarios y fortalece la innovación institucional para tomar decisiones acordes con la diversidad del territorio.',
+                  color: '#00A7C8',
+                },
+                {
+                  number: '02',
+                  img: 'assets/ejes/bienestar.png',
+                  title: 'Bienestar basado en la interculturalidad',
+                  text: 'Busca condiciones de vida dignas y equitativas: agua potable, aire limpio, soberanía alimentaria, salud física y mental, cultura ciudadana y convivencia.',
+                  color: '#7CB342',
+                },
+                {
+                  number: '03',
+                  img: 'assets/ejes/competitividad.png',
+                  title: 'Competitividad sostenible',
+                  text: 'Impulsa economía circular, bioeconomía, crecimiento verde, talento humano e innovación para generar valor desde la biodiversidad y la interculturalidad.',
+                  color: '#F52789',
+                },
+              ] as const).map((eje) => (
+                <article
+                  key={eje.title}
+                  className="group flex items-center gap-5 rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_4px_24px_rgba(15,23,42,0.07)] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(15,23,42,0.13)] hover:-translate-y-1"
+                >
+                  {/* Colored circle icon */}
+                  <div
+                    className="h-16 w-16 shrink-0 overflow-hidden rounded-full"
+                    style={{ border: `2px solid ${eje.color}66` }}
+                  >
+                    <img src={eje.img} alt={eje.title} className="h-full w-full object-cover" />
+                  </div>
+
+                  {/* Text */}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-bold leading-snug text-[#3A0D7B]">{eje.title}</h3>
+                    <p className="mt-1.5 text-sm leading-6 text-slate-500">{eje.text}</p>
+                  </div>
+
+                  {/* Number */}
+                  <span className="font-anton shrink-0 text-5xl leading-none text-slate-100 transition-colors duration-300 group-hover:text-slate-200">
+                    {eje.number}
+                  </span>
+                </article>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+
+      <section id="contacto" className="reveal bg-[#3A0D7B] py-16 text-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-200">Datos abiertos</p>
+            <h2 className="mt-3 text-3xl font-black">Consulte documentos habilitados y descargue archivos oficiales.</h2>
+          </div>
+          <button onClick={() => onAction('datos')} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-black text-[#3A0D7B] transition hover:bg-orange-50">
+            Ir a base documental
+            <Download className="h-4 w-4" />
+          </button>
+        </div>
+      </section>
+    </div>
+  );
 };
